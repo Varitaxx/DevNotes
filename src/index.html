@@ -1,0 +1,4601 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevNotes - Entwickler-Nachschlagewerk</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --bg-hover: #30363d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-orange: #d29922;
+            --accent-red: #f85149;
+            --accent-purple: #a371f7;
+            --accent-cyan: #39c5cf;
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .search-box {
+            margin-top: 16px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 14px 10px 38px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.85rem;
+            opacity: 0.6;
+        }
+
+        /* Categories */
+        .categories-section {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            padding-left: 8px;
+        }
+
+        .category-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            user-select: none;
+            border-radius: var(--radius-sm);
+            transition: background 0.15s ease;
+        }
+
+        .category-section-header:hover {
+            background: var(--bg-hover);
+        }
+
+        .category-section-header .collapse-icon {
+            transition: transform 0.2s ease;
+        }
+
+        .category-section-header.collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+
+        .category-section-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .category-section-content.collapsed {
+            max-height: 0 !important;
+        }
+
+        .category-list {
+            list-style: none;
+        }
+
+        .category-item {
+            margin-bottom: 4px;
+            position: relative;
+        }
+
+        .category-item.dragging {
+            opacity: 0.5;
+        }
+
+        .category-item.drag-over {
+            border-top: 2px solid var(--accent-blue);
+        }
+
+        .category-item .drag-handle {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            cursor: grab;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .category-item:hover .drag-handle {
+            opacity: 1;
+        }
+
+        .category-item .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .category-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            padding-left: 20px;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: left;
+        }
+
+        .category-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .category-btn.active {
+            background: var(--bg-tertiary);
+            color: var(--accent-blue);
+        }
+
+        .category-btn .star-toggle {
+            margin-left: auto;
+            padding: 4px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.15s ease;
+            font-size: 0.9rem;
+        }
+
+        .category-item:hover .star-toggle,
+        .category-btn .star-toggle.active {
+            opacity: 1;
+        }
+
+        .category-btn .star-toggle:hover {
+            color: var(--accent-orange);
+        }
+
+        .category-btn .star-toggle.active {
+            color: var(--accent-orange);
+        }
+
+        .category-icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .category-svg-icon {
+            flex-shrink: 0;
+        }
+
+        .category-svg-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .note-card-category {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            background: var(--bg-tertiary);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .note-view-category {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .category-count {
+            margin-left: auto;
+            background: var(--bg-tertiary);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .category-btn:has(.star-toggle) .category-count {
+            margin-left: 0;
+        }
+
+        .add-category-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            margin-top: 8px;
+            background: transparent;
+            border: 1px dashed var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-category-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            background: rgba(88, 166, 255, 0.05);
+        }
+
+        /* Sidebar Footer */
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .sidebar-footer-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .sidebar-footer-btn {
+            flex: 1;
+            padding: 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .sidebar-footer-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .copyright {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .copyright a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .copyright a:hover {
+            color: var(--accent-cyan);
+            text-decoration: underline;
+        }
+
+        /* Donate Button */
+        .donate-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .donate-btn:hover {
+            background: rgba(255, 196, 57, 0.1);
+            border-color: #ffc439;
+            color: #ffc439;
+        }
+
+        .donate-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Donate Modal */
+        .donate-modal-content {
+            text-align: center;
+        }
+
+        .donate-title {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .donate-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .donate-amounts {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .donate-amount-btn {
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .donate-amount-btn:hover {
+            border-color: #0070ba;
+            background: rgba(0, 112, 186, 0.1);
+        }
+
+        .donate-amount-btn.selected {
+            border-color: #0070ba;
+            background: rgba(0, 112, 186, 0.15);
+            color: #0070ba;
+        }
+
+        .donate-custom {
+            margin-bottom: 20px;
+        }
+
+        .donate-custom-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .donate-custom-input input {
+            width: 100px;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .donate-custom-input input:focus {
+            outline: none;
+            border-color: #0070ba;
+        }
+
+        .donate-custom-input span {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .donate-paypal-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px 24px;
+            background: #0070ba;
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .donate-paypal-btn:hover {
+            background: #005c96;
+        }
+
+        .donate-paypal-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .donate-paypal-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .donate-note {
+            margin-top: 12px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Setup & Login Screen */
+        .auth-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .auth-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .auth-logo-icon {
+            font-size: 3rem;
+            margin-bottom: 8px;
+        }
+
+        .auth-logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .auth-title {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 0;
+        }
+
+        .auth-btn {
+            padding: 14px 24px;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 8px;
+        }
+
+        .auth-btn:hover {
+            background: #4393e6;
+        }
+
+        .auth-btn:disabled {
+            background: var(--bg-tertiary);
+            cursor: not-allowed;
+        }
+
+        .auth-error {
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .auth-success {
+            background: rgba(63, 185, 80, 0.1);
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .auth-success code {
+            display: block;
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            word-break: break-all;
+            color: var(--text-primary);
+        }
+
+        .auth-link {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .auth-link a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        .auth-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Admin Badge & Login Button */
+        .admin-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .admin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(63, 185, 80, 0.15);
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: var(--accent-green);
+        }
+
+        .admin-badge svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .login-btn, .logout-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .login-btn:hover {
+            background: var(--bg-hover);
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        .logout-btn:hover {
+            background: rgba(248, 81, 73, 0.1);
+            color: var(--accent-red);
+            border-color: var(--accent-red);
+        }
+
+        /* Read-Only Mode */
+        .read-only-banner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(210, 153, 34, 0.1);
+            border-bottom: 1px solid rgba(210, 153, 34, 0.3);
+            color: var(--accent-orange);
+            font-size: 0.85rem;
+        }
+
+        .read-only-banner svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        body.read-only .admin-only {
+            display: none !important;
+        }
+
+        body:not(.logged-in) .admin-only {
+            display: none !important;
+        }
+
+        /* Admin Login */
+        .admin-login-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 10px;
+        }
+
+        .admin-login-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .admin-login-btn.logged-in {
+            background: rgba(63, 185, 80, 0.1);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .admin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background: rgba(63, 185, 80, 0.15);
+            border-radius: 10px;
+            font-size: 0.7rem;
+            color: var(--accent-green);
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .login-form .form-input {
+            text-align: center;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+        }
+
+        .login-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* Read-only mode styles */
+        .read-only-notice {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: rgba(210, 153, 34, 0.1);
+            border: 1px solid rgba(210, 153, 34, 0.3);
+            border-radius: 8px;
+            color: #d29922;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+        }
+
+        .read-only-notice svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        body.read-only .admin-only {
+            display: none !important;
+        }
+
+        body.read-only .note-card {
+            cursor: default;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .main-header {
+            padding: 16px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4c9aed;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+        }
+
+        .btn-danger {
+            background: var(--accent-red);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e04038;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
+        /* Notes List */
+        .notes-container {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .note-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .note-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--card-accent, var(--accent-blue));
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .note-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .note-card:hover::before {
+            opacity: 1;
+        }
+
+        .note-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            gap: 12px;
+        }
+
+        .note-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+
+        .note-card-preview {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .note-card-footer {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .note-card-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 2px 8px;
+            background: rgba(88, 166, 255, 0.1);
+            color: var(--accent-blue);
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.3rem;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            max-width: 400px;
+            margin: 0 auto 24px;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            color: var(--text-secondary);
+        }
+
+        .loading::after {
+            content: "";
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.95);
+            transition: transform 0.2s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: all 0.15s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-footer-left {
+            display: flex;
+            gap: 8px;
+        }
+
+        .modal-footer-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .print-content, .print-content * {
+                visibility: visible;
+            }
+            
+            .print-content {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 40px;
+                background: white !important;
+                color: black !important;
+            }
+            
+            .print-content h1 {
+                color: #000 !important;
+                border-bottom: 2px solid #333;
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+            }
+            
+            .print-content pre {
+                background: #f5f5f5 !important;
+                border: 1px solid #ddd !important;
+                padding: 12px !important;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+            
+            .print-content code {
+                background: #f0f0f0 !important;
+                color: #333 !important;
+            }
+            
+            .print-content .note-view-meta {
+                color: #666 !important;
+                margin-bottom: 20px;
+            }
+            
+            .print-content a {
+                color: #0066cc !important;
+            }
+
+            .print-footer {
+                margin-top: 40px;
+                padding-top: 20px;
+                border-top: 1px solid #ccc;
+                font-size: 0.85rem;
+                color: #666;
+                text-align: center;
+            }
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+        }
+
+        .form-textarea {
+            min-height: 300px;
+            resize: vertical;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* Editor Toolbar */
+        .editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+        }
+
+        .editor-toolbar-group {
+            display: flex;
+            gap: 2px;
+            padding-right: 8px;
+            border-right: 1px solid var(--border-color);
+            margin-right: 4px;
+        }
+
+        .editor-toolbar-group:last-child {
+            border-right: none;
+            padding-right: 0;
+            margin-right: 0;
+        }
+
+        .editor-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            padding: 4px 8px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .editor-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .editor-btn:active {
+            background: var(--bg-secondary);
+        }
+
+        .editor-dropdown {
+            position: relative;
+        }
+
+        .editor-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 100;
+            min-width: 200px;
+            padding: 6px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            display: none;
+        }
+
+        .editor-dropdown-menu.show {
+            display: block;
+        }
+
+        .editor-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .editor-dropdown-item:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .editor-dropdown-item .item-preview {
+            color: var(--text-muted);
+            margin-left: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        .has-toolbar .form-textarea {
+            border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+        }
+
+        /* Table Insert Modal */
+        .table-config {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .table-config .form-group {
+            margin-bottom: 0;
+        }
+
+        .table-preview-container {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            overflow-x: auto;
+            margin-top: 16px;
+        }
+
+        .table-preview-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table-preview-container th,
+        .table-preview-container td {
+            padding: 8px 12px;
+            text-align: left;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .table-preview-container th {
+            background: var(--bg-hover);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .table-preview-container.no-border th,
+        .table-preview-container.no-border td {
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .table-preview-container.no-border th {
+            border-bottom: 2px solid var(--text-muted);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent-blue);
+        }
+
+        .checkbox-group label {
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .auto-detect-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            background: linear-gradient(135deg, rgba(163, 113, 247, 0.2), rgba(88, 166, 255, 0.2));
+            border: 1px solid rgba(163, 113, 247, 0.3);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--accent-purple);
+        }
+
+        /* Note View */
+        .note-view {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .note-view-header {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .note-view-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .note-view-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+        }
+
+        .note-view-content {
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+
+        /* Markdown Styles */
+        .note-view-content h1,
+        .note-view-content h2,
+        .note-view-content h3,
+        .note-view-content h4 {
+            margin-top: 2em;
+            margin-bottom: 0.75em;
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--text-primary);
+        }
+
+        .note-view-content h1 { font-size: 1.8rem; }
+        .note-view-content h2 { font-size: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5em; }
+        .note-view-content h3 { font-size: 1.25rem; }
+        .note-view-content h4 { font-size: 1.1rem; }
+
+        .note-view-content p {
+            margin-bottom: 1em;
+        }
+
+        .note-view-content ul,
+        .note-view-content ol {
+            margin-bottom: 1em;
+            padding-left: 1.5em;
+        }
+
+        .note-view-content li {
+            margin-bottom: 0.5em;
+        }
+
+        .note-view-content code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: var(--accent-orange);
+        }
+
+        .note-view-content pre {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin: 1.5em 0;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .note-view-content pre code {
+            background: transparent;
+            padding: 0;
+            color: var(--text-primary);
+        }
+
+        .note-view-content blockquote {
+            border-left: 4px solid var(--accent-blue);
+            margin: 1.5em 0;
+            padding: 0.5em 1em;
+            background: rgba(88, 166, 255, 0.05);
+            color: var(--text-secondary);
+        }
+
+        .note-view-content a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        .note-view-content a:hover {
+            text-decoration: underline;
+        }
+
+        /* Tabellen-Styling */
+        .note-view-content table {
+            width: 100%;
+            max-width: 100%;
+            border-collapse: collapse;
+            margin: 1.5em 0;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            table-layout: fixed;
+        }
+
+        .note-view-content th,
+        .note-view-content td {
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            text-align: left;
+            vertical-align: top;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .note-view-content th {
+            background: linear-gradient(180deg, var(--bg-tertiary) 0%, var(--bg-hover) 100%);
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--accent-blue);
+            white-space: nowrap;
+        }
+
+        .note-view-content tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .note-view-content tr:hover {
+            background: rgba(88, 166, 255, 0.05);
+        }
+
+        .note-view-content td:first-child,
+        .note-view-content th:first-child {
+            border-left: none;
+        }
+
+        .note-view-content td:last-child,
+        .note-view-content th:last-child {
+            border-right: none;
+        }
+
+        /* Tabelle ohne Rahmen */
+        .note-view-content table.no-border {
+            border: none;
+            background: transparent;
+        }
+
+        .note-view-content table.no-border th,
+        .note-view-content table.no-border td {
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 16px 10px 0;
+        }
+
+        .note-view-content table.no-border th {
+            background: transparent;
+            border-bottom: 2px solid var(--text-muted);
+        }
+
+        .note-view-content table.no-border tr:hover {
+            background: transparent;
+        }
+
+        /* Responsive Tabellen */
+        .note-view-content .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin: 1.5em 0;
+            border-radius: var(--radius-sm);
+        }
+
+        .note-view-content .table-wrapper table {
+            margin: 0;
+            min-width: 400px;
+        }
+
+        .note-view-content strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .note-view-content em {
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        .note-view-content hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 2em 0;
+        }
+
+        /* Copy Button for Code Blocks */
+        .code-block-wrapper {
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 10px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+
+        .code-block-wrapper:hover .copy-btn {
+            opacity: 1;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+
+        /* Hamburger Menu */
+        .hamburger {
+            display: none;
+            width: 40px;
+            height: 40px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: background 0.2s ease;
+        }
+
+        .hamburger:hover {
+            background: var(--bg-hover);
+        }
+
+        .hamburger span {
+            width: 20px;
+            height: 2px;
+            background: var(--text-primary);
+            transition: all 0.3s ease;
+            transform-origin: center;
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -5px);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            padding: 14px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success { border-left: 4px solid var(--accent-green); }
+        .toast.error { border-left: 4px solid var(--accent-red); }
+        .toast.info { border-left: 4px solid var(--accent-blue); }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Sync Indicator */
+        .sync-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            padding: 6px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 20px;
+        }
+
+        .sync-indicator.syncing {
+            color: var(--accent-orange);
+        }
+
+        .sync-indicator.synced {
+            color: var(--accent-green);
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .notes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .modal {
+                max-height: 95vh;
+                margin: 10px;
+                max-width: calc(100% - 20px) !important;
+            }
+
+            .note-view-title {
+                font-size: 1.5rem;
+            }
+
+            .header-actions .btn span.btn-text {
+                display: none;
+            }
+
+            .notes-container {
+                padding: 16px;
+            }
+
+            .main-header {
+                padding: 12px 16px;
+            }
+
+            .modal-footer {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .modal-footer-left,
+            .modal-footer-right {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .modal-footer-right {
+                flex-wrap: wrap;
+            }
+
+            .modal-footer .btn {
+                flex: 1;
+                min-width: 80px;
+                justify-content: center;
+            }
+
+            .search-box {
+                min-width: auto;
+                flex: 1;
+            }
+        }
+
+        /* Sidebar Overlay for Mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-hover);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* File Input */
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Setup Screen -->
+    <div class="auth-screen" id="setupScreen">
+        <div class="auth-box">
+            <div class="auth-logo">
+                <div class="auth-logo-icon">📚</div>
+                <div class="auth-logo-text">DevNotes</div>
+            </div>
+            <div class="auth-title">Erstelle deinen Admin-Account</div>
+            <div class="auth-form" id="setupForm">
+                <div class="auth-error" id="setupError" style="display: none;"></div>
+                <div class="form-group">
+                    <label class="form-label">E-Mail-Adresse</label>
+                    <input type="email" class="form-input" id="setupEmail" placeholder="admin@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Passwort</label>
+                    <input type="password" class="form-input" id="setupPassword" placeholder="Mindestens 6 Zeichen" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Passwort bestätigen</label>
+                    <input type="password" class="form-input" id="setupPasswordConfirm" placeholder="Passwort wiederholen" required>
+                </div>
+                <button type="button" class="auth-btn" id="setupBtn">Account erstellen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="auth-screen" id="loginScreen" style="display: none;">
+        <div class="auth-box">
+            <div class="auth-logo">
+                <div class="auth-logo-icon">📚</div>
+                <div class="auth-logo-text">DevNotes</div>
+            </div>
+            <div class="auth-title">Admin Login</div>
+            <div class="auth-form" id="loginForm">
+                <div class="auth-error" id="loginError" style="display: none;"></div>
+                <div class="form-group">
+                    <label class="form-label">E-Mail-Adresse</label>
+                    <input type="email" class="form-input" id="loginEmail" placeholder="admin@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Passwort</label>
+                    <input type="password" class="form-input" id="loginPassword" placeholder="Passwort" required>
+                </div>
+                <button type="button" class="auth-btn" id="loginBtn">Einloggen</button>
+            </div>
+            <div class="auth-link">
+                <a href="#" id="forgotPasswordLink">Passwort vergessen?</a>
+            </div>
+            <div class="auth-link">
+                <a href="#" id="closeLoginLink">← Zurück (nur lesen)</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Reset Request Screen -->
+    <div class="auth-screen" id="resetRequestScreen" style="display: none;">
+        <div class="auth-box">
+            <div class="auth-logo">
+                <div class="auth-logo-icon">🔑</div>
+                <div class="auth-logo-text">Passwort zurücksetzen</div>
+            </div>
+            <div class="auth-title">Gib deine E-Mail-Adresse ein</div>
+            <div class="auth-form" id="resetRequestForm">
+                <div class="auth-error" id="resetRequestError" style="display: none;"></div>
+                <div class="auth-success" id="resetRequestSuccess" style="display: none;"></div>
+                <div class="form-group">
+                    <label class="form-label">E-Mail-Adresse</label>
+                    <input type="email" class="form-input" id="resetEmail" placeholder="admin@example.com" required>
+                </div>
+                <button type="button" class="auth-btn" id="resetRequestBtn">Reset-Link anfordern</button>
+            </div>
+            <div class="auth-link">
+                <a href="#" id="backToLoginLink">← Zurück zum Login</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Reset Screen (with token) -->
+    <div class="auth-screen" id="resetPasswordScreen" style="display: none;">
+        <div class="auth-box">
+            <div class="auth-logo">
+                <div class="auth-logo-icon">🔐</div>
+                <div class="auth-logo-text">Neues Passwort</div>
+            </div>
+            <div class="auth-title">Wähle ein neues Passwort</div>
+            <div class="auth-form" id="resetPasswordForm">
+                <div class="auth-error" id="resetPasswordError" style="display: none;"></div>
+                <div class="form-group">
+                    <label class="form-label">Neues Passwort</label>
+                    <input type="password" class="form-input" id="newPassword" placeholder="Mindestens 6 Zeichen" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Passwort bestätigen</label>
+                    <input type="password" class="form-input" id="newPasswordConfirm" placeholder="Passwort wiederholen" required>
+                </div>
+                <button type="button" class="auth-btn" id="resetPasswordBtn">Passwort speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">📚</div>
+                    <span>DevNotes</span>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Suchen... (Strg+K)">
+                </div>
+            </div>
+            <div class="categories-section">
+                <!-- Alle Notizen (immer sichtbar) -->
+                <ul class="category-list" id="allNotesCategory">
+                    <!-- Wird per JS gefüllt -->
+                </ul>
+                
+                <!-- Favoriten -->
+                <div class="category-section-header" id="favoritesHeader" data-section="favorites">
+                    <span>⭐ Favoriten</span>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="category-section-content" id="favoritesContent">
+                    <ul class="category-list" id="favoritesList">
+                        <!-- Wird per JS gefüllt -->
+                    </ul>
+                </div>
+                
+                <!-- Weitere Kategorien -->
+                <div class="category-section-header" id="otherHeader" data-section="other">
+                    <span>📁 Weitere</span>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="category-section-content" id="otherContent">
+                    <ul class="category-list" id="otherList">
+                        <!-- Wird per JS gefüllt -->
+                    </ul>
+                </div>
+                
+                <button class="add-category-btn admin-only" id="addCategoryBtn">
+                    <span>+</span> Neue Kategorie
+                </button>
+            </div>
+            <div class="sidebar-footer">
+                <div class="admin-section" id="adminSection">
+                    <!-- Wird per JavaScript befüllt -->
+                </div>
+                <div class="sidebar-footer-btns">
+                    <button class="sidebar-footer-btn" id="exportBtn" title="Daten exportieren">📤 Export</button>
+                    <button class="sidebar-footer-btn admin-only" id="importBtn" title="Daten importieren">📥 Import</button>
+                </div>
+                <div class="copyright">
+                    © 2025 <a href="https://asgardschmiede.eu" target="_blank">asgardschmiede.eu</a>
+                    <br>
+                    <button class="donate-btn" id="donateBtn" title="Projekt unterstützen">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                        Unterstützen
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">
+                    <button class="hamburger" id="hamburgerBtn">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <span id="currentCategoryTitle">Alle Notizen</span>
+                </div>
+                <div class="header-actions">
+                    <div class="sync-indicator synced" id="syncIndicator">
+                        <span class="sync-dot"></span>
+                        <span>Synchronisiert</span>
+                    </div>
+                    <button class="btn btn-primary admin-only" id="newNoteBtn">
+                        <span>+</span> <span class="btn-text">Neue Notiz</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="notes-container">
+                <div class="notes-grid" id="notesGrid">
+                    <div class="loading">Lade Notizen...</div>
+                </div>
+
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <div class="empty-state-icon">📝</div>
+                    <h3>Noch keine Notizen</h3>
+                    <p>Erstelle deine erste Notiz, um Anleitungen, Tutorials und wichtige Informationen zu speichern.</p>
+                    <button class="btn btn-primary admin-only" id="emptyNewNoteBtn">
+                        <span>+</span> Erste Notiz erstellen
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Note Modal (Create/Edit) -->
+    <div class="modal-overlay" id="noteModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="noteModalTitle">Neue Notiz</h2>
+                <button class="modal-close" id="closeNoteModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Titel *</label>
+                    <input type="text" class="form-input" id="noteTitleInput" placeholder="z.B. Git Cheatsheet">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Kategorie *</label>
+                        <select class="form-select" id="noteCategorySelect">
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tags (kommagetrennt)</label>
+                        <input type="text" class="form-input" id="noteTagsInput" placeholder="z.B. basics, commands">
+                    </div>
+                </div>
+                <div class="form-group has-toolbar">
+                    <label class="form-label">Inhalt (Markdown unterstützt)</label>
+                    <div class="editor-toolbar" id="editorToolbar">
+                        <div class="editor-toolbar-group">
+                            <div class="editor-dropdown">
+                                <button type="button" class="editor-btn" id="headingDropdownBtn" title="Überschrift">
+                                    H <span style="font-size: 0.7rem;">▼</span>
+                                </button>
+                                <div class="editor-dropdown-menu" id="headingDropdown">
+                                    <button type="button" class="editor-dropdown-item" data-heading="1">
+                                        <span style="font-size: 1.3rem; font-weight: 700;">Überschrift 1</span>
+                                        <span class="item-preview"># </span>
+                                    </button>
+                                    <button type="button" class="editor-dropdown-item" data-heading="2">
+                                        <span style="font-size: 1.1rem; font-weight: 600;">Überschrift 2</span>
+                                        <span class="item-preview">## </span>
+                                    </button>
+                                    <button type="button" class="editor-dropdown-item" data-heading="3">
+                                        <span style="font-size: 1rem; font-weight: 600;">Überschrift 3</span>
+                                        <span class="item-preview">### </span>
+                                    </button>
+                                    <button type="button" class="editor-dropdown-item" data-heading="4">
+                                        <span style="font-size: 0.95rem; font-weight: 500;">Überschrift 4</span>
+                                        <span class="item-preview">#### </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="editor-toolbar-group">
+                            <button type="button" class="editor-btn" data-format="bold" title="Fett (Strg+B)"><b>B</b></button>
+                            <button type="button" class="editor-btn" data-format="italic" title="Kursiv (Strg+I)"><i>I</i></button>
+                            <button type="button" class="editor-btn" data-format="code" title="Code">&lt;/&gt;</button>
+                        </div>
+                        <div class="editor-toolbar-group">
+                            <button type="button" class="editor-btn" data-format="ul" title="Aufzählung">• Liste</button>
+                            <button type="button" class="editor-btn" data-format="ul2" title="Unterliste (2. Ebene)">&nbsp;&nbsp;◦ Sub</button>
+                            <button type="button" class="editor-btn" data-format="ul3" title="Unterliste (3. Ebene)">&nbsp;&nbsp;&nbsp;&nbsp;▪ Sub</button>
+                            <button type="button" class="editor-btn" data-format="ol" title="Nummerierung">1.</button>
+                            <button type="button" class="editor-btn" data-format="quote" title="Zitat">"</button>
+                        </div>
+                        <div class="editor-toolbar-group">
+                            <button type="button" class="editor-btn" id="insertTableBtn" title="Tabelle einfügen">⊞ Tabelle</button>
+                            <button type="button" class="editor-btn" data-format="link" title="Link">🔗</button>
+                            <button type="button" class="editor-btn" data-format="codeblock" title="Code-Block">```</button>
+                        </div>
+                    </div>
+                    <textarea class="form-textarea" id="noteContentInput" placeholder="Schreibe hier deine Notiz..."></textarea>
+                    <div class="form-hint">
+                        <span class="auto-detect-badge">✨ Auto-Detect</span>
+                        Code wird automatisch erkannt und formatiert! Unterstützt: Bash, Git, JavaScript, Python, Java, SQL, Magik u.v.m.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelNoteBtn">Abbrechen</button>
+                <button class="btn btn-primary" id="saveNoteBtn">Speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Note Modal -->
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Notiz ansehen</h2>
+                <button class="modal-close" id="closeViewModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="note-view" id="noteViewContent">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-footer-left">
+                    <button class="btn btn-secondary btn-sm" id="printNoteBtn" title="Notiz drucken">🖨️ Drucken</button>
+                </div>
+                <div class="modal-footer-right">
+                    <button class="btn btn-danger admin-only" id="deleteNoteBtn">🗑️ Löschen</button>
+                    <button class="btn btn-secondary admin-only" id="editNoteBtn">✏️ Bearbeiten</button>
+                    <button class="btn btn-primary" id="closeViewBtn">Schließen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div class="modal-overlay" id="categoryModal">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="categoryModalTitle">Neue Kategorie</h2>
+                <button class="modal-close" id="closeCategoryModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Name *</label>
+                    <input type="text" class="form-input" id="categoryNameInput" placeholder="z.B. JavaScript">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Icon (Emoji)</label>
+                    <input type="text" class="form-input" id="categoryIconInput" placeholder="z.B. 🟨" maxlength="4">
+                    <div class="form-hint">Wähle ein passendes Emoji als Icon</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelCategoryBtn">Abbrechen</button>
+                <button class="btn btn-primary" id="saveCategoryBtn">Speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Insert Modal -->
+    <div class="modal-overlay" id="tableModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">⊞ Tabelle einfügen</h2>
+                <button class="modal-close" id="closeTableModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="table-config">
+                    <div class="form-group">
+                        <label class="form-label">Spalten</label>
+                        <input type="number" class="form-input" id="tableColumns" value="3" min="1" max="10">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Zeilen (ohne Kopfzeile)</label>
+                        <input type="number" class="form-input" id="tableRows" value="3" min="1" max="20">
+                    </div>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="tableBorder" checked>
+                    <label for="tableBorder">Mit Rahmen/Gitter anzeigen</label>
+                </div>
+                <div class="table-preview-container" id="tablePreview">
+                    <!-- Preview wird per JS generiert -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelTableBtn">Abbrechen</button>
+                <button class="btn btn-primary" id="insertTableBtn2">Einfügen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donate Modal -->
+    <div class="modal-overlay" id="donateModal">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 class="modal-title">❤️ Projekt unterstützen</h2>
+                <button class="modal-close" id="closeDonateModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="donate-modal-content">
+                    <div class="donate-subtitle">
+                        Wenn dir DevNotes gefällt, freue ich mich über eine kleine Spende!
+                    </div>
+                    <div class="donate-amounts">
+                        <button class="donate-amount-btn" data-amount="1">1 €</button>
+                        <button class="donate-amount-btn" data-amount="2">2 €</button>
+                        <button class="donate-amount-btn" data-amount="5">5 €</button>
+                        <button class="donate-amount-btn" data-amount="10">10 €</button>
+                    </div>
+                    <div class="donate-custom">
+                        <div class="donate-custom-input">
+                            <span>oder</span>
+                            <input type="number" id="donateCustomAmount" min="1" step="0.5" placeholder="...">
+                            <span>€</span>
+                        </div>
+                    </div>
+                    <button class="donate-paypal-btn" id="donatePaypalBtn" disabled>
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7.076 21.337H2.47a.641.641 0 01-.633-.74L4.944 2.65A.859.859 0 015.793 2h6.21c2.323 0 4.055.504 5.144 1.5.998.913 1.459 2.227 1.373 3.903-.018.346-.063.702-.133 1.064a7.372 7.372 0 01-1.162 2.98 5.75 5.75 0 01-1.762 1.636c-.582.372-1.27.661-2.043.863-.784.205-1.66.308-2.61.308H8.84a.851.851 0 00-.841.723l-.923 5.36zm7.988-14.02c-.135 0-.269.011-.401.031l-.018.003-.016.003a1.87 1.87 0 00-.18.042l-.019.005-.019.006a1.867 1.867 0 00-.17.06l-.02.008-.018.008a1.828 1.828 0 00-.159.08l-.02.012-.018.011a1.823 1.823 0 00-.146.1l-.018.014-.016.013a1.76 1.76 0 00-.13.118l-.016.016-.015.016a1.715 1.715 0 00-.114.135l-.014.018-.013.018a1.698 1.698 0 00-.096.15l-.012.02-.011.02a1.657 1.657 0 00-.078.163l-.01.022-.009.023a1.636 1.636 0 00-.058.173l-.007.024-.006.024a1.607 1.607 0 00-.037.181l-.005.025-.004.025a1.57 1.57 0 00-.015.186l-.001.026v.026a1.564 1.564 0 00.007.186l.003.026.004.025a1.567 1.567 0 00.029.182l.006.024.007.024a1.59 1.59 0 00.05.175l.009.023.01.022a1.621 1.621 0 00.07.166l.011.021.012.02a1.653 1.653 0 00.09.153l.014.02.014.018a1.69 1.69 0 00.108.14l.015.017.016.016a1.735 1.735 0 00.124.124l.017.015.017.014a1.778 1.778 0 00.14.107l.018.013.019.012a1.82 1.82 0 00.154.09l.02.01.02.01a1.856 1.856 0 00.167.07l.021.008.021.007a1.887 1.887 0 00.178.05l.022.005.022.004a1.907 1.907 0 00.186.03l.022.002.023.002a1.929 1.929 0 00.38 0l.024-.002.022-.002c.063-.007.126-.017.187-.03l.022-.005.022-.005a1.887 1.887 0 00.178-.05l.021-.007.021-.008a1.856 1.856 0 00.167-.07l.02-.01.02-.01a1.82 1.82 0 00.154-.09l.019-.012.018-.013a1.778 1.778 0 00.14-.107l.017-.014.017-.015a1.735 1.735 0 00.124-.124l.016-.016.015-.017a1.69 1.69 0 00.108-.14l.014-.018.014-.02a1.653 1.653 0 00.09-.153l.012-.02.011-.021a1.621 1.621 0 00.07-.166l.01-.022.009-.023a1.59 1.59 0 00.05-.175l.007-.024.006-.024a1.567 1.567 0 00.029-.182l.004-.025.003-.026a1.564 1.564 0 00.007-.186v-.026l-.001-.026a1.57 1.57 0 00-.015-.186l-.004-.025-.005-.025a1.607 1.607 0 00-.037-.181l-.006-.024-.007-.024a1.636 1.636 0 00-.058-.173l-.009-.023-.01-.022a1.657 1.657 0 00-.078-.163l-.011-.02-.012-.02a1.698 1.698 0 00-.096-.15l-.013-.018-.014-.018a1.715 1.715 0 00-.114-.135l-.015-.016-.016-.016a1.76 1.76 0 00-.13-.118l-.016-.013-.018-.014a1.823 1.823 0 00-.146-.1l-.018-.011-.02-.012a1.828 1.828 0 00-.159-.08l-.018-.008-.02-.008a1.867 1.867 0 00-.17-.06l-.019-.006-.019-.005a1.87 1.87 0 00-.18-.042l-.016-.003-.018-.003a1.867 1.867 0 00-.401-.031z"/>
+                        </svg>
+                        Mit PayPal spenden
+                    </button>
+                    <div class="donate-note">
+                        Du wirst zu PayPal weitergeleitet
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // API Configuration
+        // Electron IPC API - keine URL nötig
+        const NEEDS_SETUP = false; // Wird dynamisch via Electron IPC geprüft
+        
+        // Auth State
+        let isLoggedIn = false;
+        let adminEmail = null;
+        
+        // User Preferences (localStorage)
+        let userPrefs = {
+            favorites: [],           // Array von Kategorie-IDs
+            favoritesOrder: [],      // Reihenfolge der Favoriten
+            collapsedSections: [],   // Eingeklappte Sektionen
+        };
+        
+        // State Management
+        let state = {
+            categories: [],
+            notes: [],
+            categoryCounts: {},
+            currentCategory: null,
+            currentNote: null,
+            searchQuery: '',
+            editingNoteId: null,
+            isLoading: false
+        };
+        
+        // Load/Save User Preferences
+        function loadUserPrefs() {
+            try {
+                const saved = localStorage.getItem('devnotes_prefs');
+                if (saved) {
+                    userPrefs = { ...userPrefs, ...JSON.parse(saved) };
+                }
+            } catch (e) {
+                console.warn('Could not load preferences:', e);
+            }
+        }
+        
+        function saveUserPrefs() {
+            try {
+                localStorage.setItem('devnotes_prefs', JSON.stringify(userPrefs));
+            } catch (e) {
+                console.warn('Could not save preferences:', e);
+            }
+        }
+        
+        function toggleFavorite(categoryId) {
+            const idx = userPrefs.favorites.indexOf(categoryId);
+            if (idx > -1) {
+                userPrefs.favorites.splice(idx, 1);
+                userPrefs.favoritesOrder = userPrefs.favoritesOrder.filter(id => id !== categoryId);
+            } else {
+                userPrefs.favorites.push(categoryId);
+                userPrefs.favoritesOrder.push(categoryId);
+            }
+            saveUserPrefs();
+            renderCategories();
+        }
+        
+        function toggleSection(section) {
+            const idx = userPrefs.collapsedSections.indexOf(section);
+            if (idx > -1) {
+                userPrefs.collapsedSections.splice(idx, 1);
+            } else {
+                userPrefs.collapsedSections.push(section);
+            }
+            saveUserPrefs();
+            updateSectionUI();
+        }
+        
+        function updateSectionUI() {
+            ['favorites', 'other'].forEach(section => {
+                const header = document.getElementById(section + 'Header');
+                const content = document.getElementById(section + 'Content');
+                if (!header || !content) return;
+                
+                const isCollapsed = userPrefs.collapsedSections.includes(section);
+                header.classList.toggle('collapsed', isCollapsed);
+                content.classList.toggle('collapsed', isCollapsed);
+                
+                if (!isCollapsed) {
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                }
+            });
+        }
+        
+        function reorderFavorites(draggedId, targetId) {
+            const order = userPrefs.favoritesOrder;
+            const draggedIdx = order.indexOf(draggedId);
+            const targetIdx = order.indexOf(targetId);
+            
+            if (draggedIdx > -1 && targetIdx > -1) {
+                order.splice(draggedIdx, 1);
+                order.splice(targetIdx, 0, draggedId);
+                saveUserPrefs();
+                renderCategories();
+            }
+        }
+
+        // SVG Icons für Kategorien
+        const categoryIcons = {
+            git: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M29.472 14.753L17.247 2.528a1.8 1.8 0 00-2.55 0l-2.539 2.539 3.23 3.23a2.14 2.14 0 012.712 2.73l3.11 3.11a2.14 2.14 0 11-1.282 1.196l-2.9-2.9v7.633a2.14 2.14 0 11-1.764-.062v-7.707a2.14 2.14 0 01-1.163-2.808l-3.18-3.18-8.393 8.393a1.8 1.8 0 000 2.55l12.225 12.225a1.8 1.8 0 002.55 0l12.169-12.17a1.8 1.8 0 000-2.55z" fill="#F05032"/>
+            </svg>`,
+            
+            vscode: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M23.5 2L10 13.5 4 8.5 2 10v12l2 1.5 6-5L23.5 30l6.5-3V5L23.5 2zM6 18.5v-5l3 2.5-3 2.5zm17.5 5.5l-10-8 10-8v16z" fill="#007ACC"/>
+            </svg>`,
+            
+            java: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11.622 24.74s-1.23.748.855.962c2.51.32 3.847.267 6.625-.267a10.4 10.4 0 001.763.855c-6.25 2.672-14.16-.16-9.243-1.55zm-.8-3.473s-1.336 1.015.748 1.23c2.725.267 4.862.32 8.55-.428a3.74 3.74 0 001.283.748c-7.528 2.245-15.92.213-10.58-1.55z" fill="#5382A1"/>
+                <path d="M18.996 18.22c1.496-1.71-.427-3.26-.427-3.26s3.74 1.923 2.03 4.382c-1.603 2.298-2.832 3.42 3.793-1.87 0 0-10.366 2.672-5.396.748z" fill="#F8981D"/>
+                <path d="M24.018 26.824s.908.748-.962 1.336c-3.58 1.07-14.907 1.39-18.062.053-1.123-.48.962-1.177 1.603-1.283.695-.16 1.07-.107 1.07-.107-1.23-.855-7.955 1.71-3.42 2.458 12.395 2.03 22.6-.908 19.77-2.458zm-12.341-8.87s-5.663 1.336-2.03 1.817c1.55.213 4.648.16 7.528-.053 2.352-.214 4.755-.695 4.755-.695s-.855.32-1.443.748c-5.93 1.55-17.364.802-14.052-.748 2.778-1.283 5.242-1.07 5.242-1.07z" fill="#5382A1"/>
+                <path d="M21.614 22.395c6.037-3.153 3.26-6.144 1.283-5.77-.48.106-.695.213-.695.213s.16-.32.534-.427c3.954-1.39 7.048 4.115-1.23 6.304 0 0 .054-.053.107-.32z" fill="#F8981D"/>
+                <path d="M19.21 2s3.366 3.366-3.153 8.496c-5.236 4.115-1.177 6.464 0 9.136-3.046-2.725-5.29-5.13-3.793-7.368C14.4 9.027 20.44 7.584 19.21 2z" fill="#F8981D"/>
+                <path d="M12.368 29.79c5.77.374 14.64-.213 14.854-2.992 0 0-.427 1.016-4.702 1.87-4.808.908-10.74.802-14.267.214 0 0 .695.588 4.115.908z" fill="#5382A1"/>
+            </svg>`,
+            
+            react: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="2.5" fill="#61DAFB"/>
+                <ellipse cx="16" cy="16" rx="10" ry="4" stroke="#61DAFB" stroke-width="1.5" fill="none"/>
+                <ellipse cx="16" cy="16" rx="10" ry="4" stroke="#61DAFB" stroke-width="1.5" fill="none" transform="rotate(60 16 16)"/>
+                <ellipse cx="16" cy="16" rx="10" ry="4" stroke="#61DAFB" stroke-width="1.5" fill="none" transform="rotate(120 16 16)"/>
+            </svg>`,
+            
+            intellij: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="ij1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#F97A12"/>
+                        <stop offset="100%" style="stop-color:#B07BE6"/>
+                    </linearGradient>
+                </defs>
+                <rect x="4" y="4" width="24" height="24" rx="2" fill="url(#ij1)"/>
+                <rect x="7" y="7" width="12" height="3" fill="#fff"/>
+                <rect x="7" y="22" width="8" height="3" fill="#fff"/>
+                <text x="8" y="18" font-size="8" font-weight="bold" fill="#fff" font-family="sans-serif">IJ</text>
+            </svg>`,
+            
+            docker: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 9h3v3h-3V9zm-4 0h3v3h-3V9zm-4 0h3v3H10V9zm-4 0h3v3H6V9zm4-4h3v3h-3V5zm4 0h3v3h-3V5zm4 0h3v3h-3V5zm-4-4h3v3h-3V1z" fill="#2496ED"/>
+                <path d="M28.8 13.3c-.6-.4-2-.6-3-.3-.1-1.1-.7-2.1-1.6-2.9l-.6-.4-.4.5c-.5.6-.8 1.4-.7 2.2.1.5.2 1 .6 1.5-.5.3-.9.4-1.4.6-.8.2-1.5.3-2.3.3H2.1l-.1.7c-.1 1.4.1 2.7.6 4 .6 1.4 1.5 2.5 2.8 3.2 1.4.8 3.2 1.2 5.2 1.2.9 0 1.9-.1 2.8-.2 1.4-.2 2.8-.6 4-1.2 1-.5 2-1.1 2.8-2 1.3-1.3 2-2.8 2.6-4.4h.2c1.1 0 2.2-.3 3-.9.4-.3.7-.6.9-1l.2-.4-.3-.5z" fill="#2496ED"/>
+            </svg>`,
+            
+            linux: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 2C11 2 7 7 7 12c0 3 1 5 2 7-1 1-3 3-3 5 0 1 1 2 2 2h16c1 0 2-1 2-2 0-2-2-4-3-5 1-2 2-4 2-7 0-5-4-10-9-10z" fill="#333"/>
+                <ellipse cx="12" cy="11" rx="2" ry="2.5" fill="#fff"/>
+                <ellipse cx="20" cy="11" rx="2" ry="2.5" fill="#fff"/>
+                <circle cx="12" cy="11.5" r="1" fill="#000"/>
+                <circle cx="20" cy="11.5" r="1" fill="#000"/>
+                <path d="M13 17c0 0 1.5 2 3 2s3-2 3-2" stroke="#f5a623" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            </svg>`,
+            
+            python: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15.885 2.1c-7.1 0-6.651 3.07-6.651 3.07l.008 3.18h6.77v.954H6.04S2 8.87 2 16.042c0 7.17 3.525 6.917 3.525 6.917h2.104v-3.328s-.113-3.525 3.468-3.525h5.97s3.358.054 3.358-3.246V7.09S21.005 2.1 15.885 2.1zm-3.318 2.897a1.082 1.082 0 110 2.165 1.082 1.082 0 010-2.165z" fill="#366A96"/>
+                <path d="M16.115 29.9c7.1 0 6.651-3.07 6.651-3.07l-.008-3.18h-6.77v-.954h9.972S30 23.13 30 15.958c0-7.17-3.525-6.917-3.525-6.917h-2.104v3.328s.113 3.525-3.468 3.525h-5.97s-3.358-.054-3.358 3.246v5.77S10.995 29.9 16.115 29.9zm3.318-2.897a1.082 1.082 0 110-2.165 1.082 1.082 0 010 2.165z" fill="#FFC836"/>
+            </svg>`,
+            
+            magik: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="mg1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#4facfe"/>
+                        <stop offset="100%" style="stop-color:#00d4aa"/>
+                    </linearGradient>
+                    <linearGradient id="mg2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#ffd700"/>
+                        <stop offset="100%" style="stop-color:#ff8c00"/>
+                    </linearGradient>
+                </defs>
+                <circle cx="16" cy="18" r="11" fill="url(#mg1)"/>
+                <ellipse cx="16" cy="18" rx="11" ry="11" fill="none" stroke="#fff" stroke-width="0.8" opacity="0.4"/>
+                <ellipse cx="16" cy="18" rx="6" ry="11" fill="none" stroke="#fff" stroke-width="0.6" opacity="0.3"/>
+                <line x1="5" y1="18" x2="27" y2="18" stroke="#fff" stroke-width="0.6" opacity="0.3"/>
+                <path d="M16 1 L17.5 7 L24 9 L17.5 11 L16 17 L14.5 11 L8 9 L14.5 7 Z" fill="url(#mg2)"/>
+                <circle cx="25" cy="5" r="1.2" fill="#ffd700" opacity="0.8"/>
+                <circle cx="7" cy="4" r="0.8" fill="#ffd700" opacity="0.6"/>
+            </svg>`,
+            
+            smallworld: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="sw1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#1e88e5"/>
+                        <stop offset="100%" style="stop-color:#00acc1"/>
+                    </linearGradient>
+                </defs>
+                <circle cx="16" cy="16" r="13" fill="url(#sw1)"/>
+                <ellipse cx="16" cy="16" rx="13" ry="13" fill="none" stroke="#fff" stroke-width="1" opacity="0.5"/>
+                <ellipse cx="16" cy="16" rx="7" ry="13" fill="none" stroke="#fff" stroke-width="0.8" opacity="0.4"/>
+                <ellipse cx="16" cy="16" rx="2.5" ry="13" fill="none" stroke="#fff" stroke-width="0.6" opacity="0.3"/>
+                <line x1="3" y1="16" x2="29" y2="16" stroke="#fff" stroke-width="0.8" opacity="0.4"/>
+                <ellipse cx="16" cy="9" rx="11" ry="3.5" fill="none" stroke="#fff" stroke-width="0.6" opacity="0.3"/>
+                <ellipse cx="16" cy="23" rx="11" ry="3.5" fill="none" stroke="#fff" stroke-width="0.6" opacity="0.3"/>
+                <path d="M8 12l4 2-2 4 5 1 1 5 4-3 4 3 1-5 5-1-2-4 4-2-4-2 2-4-5 1-1-5-4 3-4-3-1 5-5-1 2 4z" fill="none" stroke="#fff" stroke-width="0.5" opacity="0.2"/>
+            </svg>`,
+            
+            php: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="16" cy="16" rx="14" ry="9" fill="#777BB3"/>
+                <path d="M10 13h2.5c1.5 0 2.5.8 2.5 2.2 0 1.6-1.2 2.8-3 2.8h-1.5l-.5 2H8l2-7zm1.3 3.5h1c.8 0 1.4-.5 1.4-1.3 0-.5-.4-.8-1-.8h-1l-.4 2.1z" fill="#fff"/>
+                <path d="M16 11h2l-.3 1.5h1.3c1 0 1.7.2 2 .7.3.4.3 1 .1 1.8l-.6 2.5h-2l.5-2.3c.1-.4.1-.7 0-.8-.1-.2-.3-.2-.7-.2h-1l-.8 3.3h-2l1.5-6.5z" fill="#fff"/>
+                <path d="M22 13h2.5c1.5 0 2.5.8 2.5 2.2 0 1.6-1.2 2.8-3 2.8h-1.5l-.5 2h-2l2-7zm1.3 3.5h1c.8 0 1.4-.5 1.4-1.3 0-.5-.4-.8-1-.8h-1l-.4 2.1z" fill="#fff"/>
+            </svg>`,
+            
+            html: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 3l2.3 25.2L16 30l8.7-1.8L27 3H5z" fill="#E44D26"/>
+                <path d="M16 27.5l7-1.9 2-21.6H16v23.5z" fill="#F16529"/>
+                <path d="M16 13.5h-4.5l-.3-3.5H16V7H8.5l.8 9H16v-2.5zm0 7l-4.3-1.2-.3-3.3h-3l.5 6.3 7.1 2v-3.8z" fill="#EBEBEB"/>
+                <path d="M16 13.5v2.5h4.2l-.4 4.5-3.8 1v3.8l7-2 .1-.8.7-8 .1-1h-7.9zm0-6.5v3h7.2l.1-.8.2-2.2H16z" fill="#fff"/>
+            </svg>`,
+            
+            sql: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="16" cy="8" rx="10" ry="4" fill="#F29111"/>
+                <path d="M6 8v5c0 2.2 4.5 4 10 4s10-1.8 10-4V8c0 2.2-4.5 4-10 4S6 10.2 6 8z" fill="#F29111"/>
+                <path d="M6 13v5c0 2.2 4.5 4 10 4s10-1.8 10-4v-5c0 2.2-4.5 4-10 4s-10-1.8-10-4z" fill="#F29111"/>
+                <path d="M6 18v5c0 2.2 4.5 4 10 4s10-1.8 10-4v-5c0 2.2-4.5 4-10 4s-10-1.8-10-4z" fill="#F29111"/>
+                <ellipse cx="16" cy="8" rx="10" ry="4" fill="none" stroke="#fff" stroke-width="0.5" opacity="0.3"/>
+                <ellipse cx="16" cy="13" rx="10" ry="4" fill="none" stroke="#fff" stroke-width="0.5" opacity="0.3"/>
+                <ellipse cx="16" cy="18" rx="10" ry="4" fill="none" stroke="#fff" stroke-width="0.5" opacity="0.3"/>
+                <ellipse cx="16" cy="23" rx="10" ry="4" fill="none" stroke="#fff" stroke-width="0.5" opacity="0.3"/>
+            </svg>`,
+            
+            postgresql: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.8 3.4c-1.5-.4-3-.6-4.5-.4-1 .1-2 .4-2.8 1-.8-.4-1.8-.6-2.8-.6-3.5 0-6.5 2-8 5-.8 1.7-1 3.5-.8 5.3.3 2.5 1.3 5 2.6 7.2.7 1 1.4 2 2.3 2.8.5.5 1.2.8 1.9.8h.3c1-.1 1.8-.8 2.2-1.7l.2-.5c.4.3.9.5 1.4.6h.4c1.2 0 2.2-.7 2.7-1.7.3-.5.4-1.1.5-1.7 1-.3 1.8-.8 2.5-1.5 1-1 1.7-2.3 2-3.7.3-1.3.3-2.6 0-3.9.8-1 1.2-2.2 1.3-3.5.1-1.4-.2-2.8-1-4-.3-.4-.7-.8-1.1-1.1-.3-.3-.7-.4-1.1-.5h-.2z" fill="#336791"/>
+                <path d="M21.5 6c-.8 0-1.5.2-2.2.6.5.5.9 1.1 1.1 1.8.3.8.3 1.7.1 2.5 1-.2 2-.1 2.9.3.5.2 1 .5 1.3.9.2-.6.3-1.2.3-1.8 0-2.4-1.6-4.3-3.5-4.3z" fill="#fff" opacity="0.15"/>
+                <ellipse cx="13" cy="12" rx="1.2" ry="2" fill="#fff"/>
+                <ellipse cx="19" cy="12" rx="1.2" ry="2" fill="#fff"/>
+            </svg>`,
+            
+            qgis: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="12" fill="#93B023"/>
+                <circle cx="16" cy="16" r="7" fill="#fff"/>
+                <circle cx="16" cy="16" r="4" fill="#93B023"/>
+                <path d="M16 4v4M16 24v4M4 16h4M24 16h4" stroke="#93B023" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M7.5 7.5l2.8 2.8M21.7 21.7l2.8 2.8M7.5 24.5l2.8-2.8M21.7 10.3l2.8-2.8" stroke="#93B023" stroke-width="1.5" stroke-linecap="round"/>
+                <text x="11" y="20" font-size="8" font-weight="bold" fill="#fff" font-family="sans-serif">Q</text>
+            </svg>`,
+            
+            geoserver: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="13" fill="#4A7FB5"/>
+                <path d="M8 11c2-3 5-5 8-5s6 2 8 5" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                <path d="M8 16c2-3 5-5 8-5s6 2 8 5" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                <path d="M8 21c2-3 5-5 8-5s6 2 8 5" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                <circle cx="16" cy="14" r="2" fill="#7CB342"/>
+                <circle cx="11" cy="18" r="1.5" fill="#EF5350"/>
+                <circle cx="21" cy="19" r="1.5" fill="#FFC107"/>
+                <circle cx="16" cy="22" r="1.2" fill="#fff"/>
+            </svg>`,
+            
+            misc: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 6h24v4H4V6z" fill="#6B7280"/>
+                <path d="M6 10v16h20V10H6zm4 4h12v2H10v-2zm0 4h8v2h-8v-2z" fill="#9CA3AF"/>
+                <path d="M4 6l2-2h20l2 2H4z" fill="#4B5563"/>
+            </svg>`,
+            
+            all: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="4" width="11" height="11" rx="2" fill="#58a6ff"/>
+                <rect x="18" y="4" width="11" height="11" rx="2" fill="#3fb950"/>
+                <rect x="3" y="17" width="11" height="11" rx="2" fill="#d29922"/>
+                <rect x="18" y="17" width="11" height="11" rx="2" fill="#a371f7"/>
+            </svg>`,
+            
+            github: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M16 2C8.265 2 2 8.265 2 16c0 6.195 4.008 11.427 9.572 13.282.7.123.963-.297.963-.665 0-.332-.018-1.434-.018-2.607-3.517.647-4.427-.86-4.707-1.65-.158-.402-.84-1.65-1.435-1.983-.49-.263-1.19-.912-.018-.93 1.103-.017 1.89 1.015 2.153 1.435 1.26 2.117 3.273 1.523 4.078 1.155.122-.91.49-1.523.892-1.873-3.115-.35-6.37-1.557-6.37-6.912 0-1.523.542-2.783 1.435-3.763-.14-.35-.63-1.785.14-3.71 0 0 1.173-.367 3.85 1.436a12.99 12.99 0 013.5-.473c1.19 0 2.38.158 3.5.473 2.677-1.82 3.85-1.435 3.85-1.435.77 1.925.28 3.36.14 3.71.893.98 1.435 2.222 1.435 3.762 0 5.372-3.273 6.563-6.388 6.912.508.438.944 1.278.944 2.59 0 1.873-.017 3.378-.017 3.85 0 .368.262.805.962.665A14.022 14.022 0 0030 16c0-7.735-6.265-14-14-14z" fill="#fff"/>
+            </svg>`,
+            
+            eclipse: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="13" fill="#2C2255"/>
+                <path d="M8 16c0-4.4 3.6-8 8-8" stroke="#F7941E" stroke-width="3" stroke-linecap="round"/>
+                <path d="M24 16c0 4.4-3.6 8-8 8" stroke="#F7941E" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="16" cy="16" r="4" fill="#F7941E"/>
+                <ellipse cx="16" cy="16" rx="10" ry="5" fill="none" stroke="#fff" stroke-width="1" opacity="0.3"/>
+            </svg>`,
+            
+            csharp: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 2L3 9v14l13 7 13-7V9L16 2z" fill="#68217A"/>
+                <path d="M16 2l13 7v14l-13 7V2z" fill="#9B4F96" opacity="0.6"/>
+                <text x="8" y="21" font-size="12" font-weight="bold" fill="#fff" font-family="sans-serif">C#</text>
+            </svg>`,
+            
+            javascript: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="2" y="2" width="28" height="28" fill="#F7DF1E"/>
+                <path d="M8.5 24.5v-8h3v8c0 1.5.8 2 2 2s2-.5 2-2v-8h3v8c0 3.5-2 5-5 5s-5-1.5-5-5z" fill="#000"/>
+                <path d="M20 24c.5 1 1.5 1.8 3 1.8 1.2 0 2-.5 2-1.3 0-1-.8-1.3-2.2-1.8l-.8-.3c-2.2-.9-3.5-2-3.5-4.4 0-2.2 1.7-3.8 4.3-3.8 1.9 0 3.2.6 4.2 2.3l-2.3 1.5c-.5-.9-1-1.3-1.9-1.3-.9 0-1.4.5-1.4 1.2 0 .8.5 1.2 1.8 1.7l.8.3c2.5 1.1 3.8 2.2 3.8 4.6 0 2.6-2 4.1-4.8 4.1-2.7 0-4.4-1.3-5.2-3l2.2-1.6z" fill="#000"/>
+            </svg>`,
+            
+            // Fallback für unbekannte Icons
+            default: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="4" width="24" height="24" rx="4" fill="#6B7280"/>
+                <text x="16" y="20" font-size="12" fill="#fff" text-anchor="middle" font-family="sans-serif">?</text>
+            </svg>`
+        };
+
+        // Funktion zum Rendern eines Icons
+        function renderIcon(iconKey, size = 20) {
+            // Prüfe ob es ein SVG-Icon gibt
+            if (categoryIcons[iconKey]) {
+                return `<span class="category-svg-icon" style="width:${size}px;height:${size}px;display:inline-flex;align-items:center;justify-content:center;">${categoryIcons[iconKey]}</span>`;
+            }
+            // Fallback: Emoji oder Default-Icon
+            if (iconKey && iconKey.length <= 4) {
+                return `<span class="category-icon" style="font-size:${size * 0.9}px">${iconKey}</span>`;
+            }
+            return `<span class="category-svg-icon" style="width:${size}px;height:${size}px;display:inline-flex;align-items:center;justify-content:center;">${categoryIcons.default}</span>`;
+        }
+
+        // API Helper - Electron IPC Version
+        async function apiCall(action, params = {}, method = 'GET') {
+            try {
+                updateSyncStatus('syncing');
+                
+                // Nutze Electron IPC statt HTTP-Fetch
+                const data = await window.api.call(action, params);
+                
+                // Handle login requirement
+                if (data.need_login) {
+                    document.getElementById('loginScreen').style.display = 'flex';
+                    document.getElementById('loginEmail').focus();
+                    throw new Error('Bitte einloggen');
+                }
+                
+                if (!data.success && data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateSyncStatus('synced');
+                return data;
+            } catch (error) {
+                updateSyncStatus('error');
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        // Update Sync Status Indicator
+        function updateSyncStatus(status) {
+            const indicator = document.getElementById('syncIndicator');
+            indicator.className = 'sync-indicator ' + status;
+            
+            const statusText = {
+                syncing: 'Synchronisiere...',
+                synced: 'Synchronisiert',
+                error: 'Offline'
+            };
+            
+            indicator.innerHTML = `
+                <span class="sync-dot"></span>
+                <span>${statusText[status] || status}</span>
+            `;
+        }
+
+        // Initialize
+        async function init() {
+            // Setup event listeners first
+            setupSetupForm();
+            setupAuthListeners();
+            
+            try {
+                // Check if setup is needed via Electron API
+                const setupRes = await window.electronAPI.checkSetup();
+                
+                if (setupRes.needs_setup) {
+                    // Show setup screen
+                    document.getElementById('setupScreen').style.display = 'flex';
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.querySelector('.app-container').style.display = 'none';
+                    return;
+                }
+                
+                // Check auth status via Electron API
+                const authRes = await window.electronAPI.checkAuth();
+                
+                if (authRes.logged_in) {
+                    // User is logged in - show main app
+                    isLoggedIn = true;
+                    adminEmail = authRes.email;
+                    
+                    document.getElementById('setupScreen').style.display = 'none';
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.querySelector('.app-container').style.display = 'flex';
+                    
+                    // Load user preferences from localStorage
+                    loadUserPrefs();
+                    setupEventListeners();
+                    configureMarked();
+                    await loadData();
+                    updateAdminUI();
+                } else {
+                    // Show login screen
+                    document.getElementById('setupScreen').style.display = 'none';
+                    document.getElementById('loginScreen').style.display = 'flex';
+                    document.querySelector('.app-container').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Init error:', error);
+                // Fallback: show login screen
+                document.getElementById('setupScreen').style.display = 'none';
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.querySelector('.app-container').style.display = 'none';
+            }
+        }
+
+        // Setup Form (Erstinstallation)
+        function setupSetupForm() {
+            const setupBtn = document.getElementById('setupBtn');
+            if (!setupBtn) return;
+            
+            setupBtn.addEventListener('click', async () => {
+                const email = document.getElementById('setupEmail').value.trim();
+                const password = document.getElementById('setupPassword').value;
+                const passwordConfirm = document.getElementById('setupPasswordConfirm').value;
+                const errorEl = document.getElementById('setupError');
+                
+                errorEl.style.display = 'none';
+                
+                try {
+                    const res = await apiCall('setup', { email, password, password_confirm: passwordConfirm }, 'POST');
+                    if (res.success) {
+                        // Setup erfolgreich - direkt in die App
+                        isLoggedIn = true;
+                        adminEmail = email;
+                        
+                        document.getElementById('setupScreen').style.display = 'none';
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.querySelector('.app-container').style.display = 'flex';
+                        document.body.classList.add('logged-in');
+                        
+                        // Load app data
+                        loadUserPrefs();
+                        setupEventListeners();
+                        configureMarked();
+                        await loadData();
+                        updateAdminUI();
+                        
+                        showToast('Account erstellt! Willkommen bei DevNotes.', 'success');
+                    } else {
+                        errorEl.textContent = res.error || 'Fehler beim Setup';
+                        errorEl.style.display = 'block';
+                    }
+                } catch (e) {
+                    errorEl.textContent = e.message || 'Fehler beim Setup';
+                    errorEl.style.display = 'block';
+                }
+            });
+            
+            // Enter key support
+            ['setupEmail', 'setupPassword', 'setupPasswordConfirm'].forEach(id => {
+                document.getElementById(id)?.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') setupBtn.click();
+                });
+            });
+        }
+
+        // Auth Listeners
+        function setupAuthListeners() {
+            // Login Button
+            document.getElementById('loginBtn')?.addEventListener('click', async () => {
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                const errorEl = document.getElementById('loginError');
+                
+                errorEl.style.display = 'none';
+                
+                try {
+                    const res = await apiCall('login', { email, password }, 'POST');
+                    if (res.success) {
+                        isLoggedIn = true;
+                        adminEmail = email;
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.querySelector('.app-container').style.display = 'flex';
+                        document.body.classList.add('logged-in');
+                        
+                        // Load app data
+                        loadUserPrefs();
+                        setupEventListeners();
+                        configureMarked();
+                        await loadData();
+                        updateAdminUI();
+                        
+                        showToast('Erfolgreich eingeloggt!', 'success');
+                    } else {
+                        errorEl.textContent = res.error || 'Login fehlgeschlagen';
+                        errorEl.style.display = 'block';
+                    }
+                } catch (e) {
+                    errorEl.textContent = e.message || 'Login fehlgeschlagen';
+                    errorEl.style.display = 'block';
+                }
+            });
+            
+            // Enter key for login
+            ['loginEmail', 'loginPassword'].forEach(id => {
+                document.getElementById(id)?.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') document.getElementById('loginBtn').click();
+                });
+            });
+            
+            // Close login screen
+            document.getElementById('closeLoginLink')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('loginScreen').style.display = 'none';
+            });
+            
+            // Forgot password - show reset request screen
+            document.getElementById('forgotPasswordLink')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('resetRequestScreen').style.display = 'flex';
+                document.getElementById('resetEmail').focus();
+            });
+            
+            // Back to login from reset request
+            document.getElementById('backToLoginLink')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('resetRequestScreen').style.display = 'none';
+                document.getElementById('loginScreen').style.display = 'flex';
+            });
+            
+            // Request password reset
+            document.getElementById('resetRequestBtn')?.addEventListener('click', requestPasswordReset);
+            document.getElementById('resetEmail')?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') requestPasswordReset();
+            });
+            
+            // Reset password with token
+            document.getElementById('resetPasswordBtn')?.addEventListener('click', resetPassword);
+            ['newPassword', 'newPasswordConfirm'].forEach(id => {
+                document.getElementById(id)?.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') resetPassword();
+                });
+            });
+            
+            // Check for reset token in URL
+            checkResetToken();
+        }
+        
+        function checkResetToken() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('reset_token');
+            if (token) {
+                // Show reset password screen
+                document.getElementById('resetPasswordScreen').style.display = 'flex';
+                document.getElementById('resetPasswordScreen').dataset.token = token;
+                document.getElementById('newPassword').focus();
+            }
+        }
+        
+        async function requestPasswordReset() {
+            const email = document.getElementById('resetEmail').value.trim();
+            const errorEl = document.getElementById('resetRequestError');
+            const successEl = document.getElementById('resetRequestSuccess');
+            const btn = document.getElementById('resetRequestBtn');
+            
+            errorEl.style.display = 'none';
+            successEl.style.display = 'none';
+            
+            if (!email) {
+                errorEl.textContent = 'Bitte gib deine E-Mail-Adresse ein';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            // Button deaktivieren während Anfrage läuft
+            btn.disabled = true;
+            btn.textContent = 'Wird gesendet...';
+            
+            try {
+                const res = await apiCall('request_password_reset', { email }, 'POST');
+                if (res.success) {
+                    const baseUrl = window.location.href.split('?')[0];
+                    
+                    if (res.debug_token) {
+                        // E-Mail konnte nicht gesendet werden, zeige Token
+                        let errorMsg = res.email_error ? `<small style="color: var(--text-muted);">(${res.email_error})</small><br><br>` : '';
+                        successEl.innerHTML = `
+                            ${errorMsg}
+                            <strong>Reset-Link:</strong>
+                            <code>${baseUrl}?reset_token=${res.debug_token}</code>
+                            <br><br>
+                            <small>Kopiere den Link oder <a href="${baseUrl}?reset_token=${res.debug_token}">klicke hier</a></small>
+                        `;
+                        successEl.style.background = 'rgba(255, 193, 7, 0.1)';
+                        successEl.style.borderColor = 'var(--accent-orange)';
+                        successEl.style.color = 'var(--accent-orange)';
+                    } else {
+                        // E-Mail wurde erfolgreich gesendet
+                        successEl.innerHTML = `
+                            <strong>✓ E-Mail gesendet!</strong><br>
+                            Ein Reset-Link wurde an <strong>${email}</strong> gesendet.<br>
+                            <small>Bitte prüfe auch deinen Spam-Ordner.</small>
+                        `;
+                        successEl.style.background = 'rgba(63, 185, 80, 0.1)';
+                        successEl.style.borderColor = 'var(--accent-green)';
+                        successEl.style.color = 'var(--accent-green)';
+                    }
+                    successEl.style.display = 'block';
+                }
+            } catch (e) {
+                errorEl.textContent = e.message || 'Fehler beim Anfordern des Resets';
+                errorEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Reset-Link anfordern';
+            }
+        }
+        
+        async function resetPassword() {
+            const token = document.getElementById('resetPasswordScreen').dataset.token;
+            const newPassword = document.getElementById('newPassword').value;
+            const newPasswordConfirm = document.getElementById('newPasswordConfirm').value;
+            const errorEl = document.getElementById('resetPasswordError');
+            
+            errorEl.style.display = 'none';
+            
+            if (!newPassword || newPassword.length < 6) {
+                errorEl.textContent = 'Das Passwort muss mindestens 6 Zeichen haben';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            if (newPassword !== newPasswordConfirm) {
+                errorEl.textContent = 'Die Passwörter stimmen nicht überein';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const res = await apiCall('reset_password', { 
+                    token, 
+                    new_password: newPassword, 
+                    new_password_confirm: newPasswordConfirm 
+                }, 'POST');
+                
+                if (res.success) {
+                    showToast('Passwort wurde zurückgesetzt! Du kannst dich jetzt einloggen.', 'success');
+                    // Remove token from URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    // Show login screen
+                    document.getElementById('resetPasswordScreen').style.display = 'none';
+                    document.getElementById('loginScreen').style.display = 'flex';
+                    document.getElementById('loginEmail').focus();
+                }
+            } catch (e) {
+                errorEl.textContent = e.message || 'Fehler beim Zurücksetzen des Passworts';
+                errorEl.style.display = 'block';
+            }
+        }
+
+        // Check Auth Status
+        async function checkAuth() {
+            try {
+                const res = await apiCall('check_auth');
+                isLoggedIn = res.logged_in || false;
+                adminEmail = res.email || null;
+                if (isLoggedIn) {
+                    document.body.classList.add('logged-in');
+                }
+            } catch (e) {
+                isLoggedIn = false;
+            }
+        }
+
+        // Update Admin UI
+        function updateAdminUI() {
+            const adminSection = document.getElementById('adminSection');
+            if (!adminSection) return;
+            
+            if (isLoggedIn) {
+                document.body.classList.add('logged-in');
+                adminSection.innerHTML = `
+                    <span class="admin-badge">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        Admin
+                    </span>
+                    <button class="logout-btn" id="logoutBtn">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+                        Logout
+                    </button>
+                `;
+                document.getElementById('logoutBtn')?.addEventListener('click', logout);
+            } else {
+                document.body.classList.remove('logged-in');
+                adminSection.innerHTML = `
+                    <button class="login-btn" id="showLoginBtn">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z"/></svg>
+                        Admin Login
+                    </button>
+                `;
+                document.getElementById('showLoginBtn')?.addEventListener('click', () => {
+                    document.getElementById('loginScreen').style.display = 'flex';
+                    document.getElementById('loginEmail').focus();
+                });
+            }
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                await apiCall('logout', {}, 'POST');
+            } catch (e) {}
+            isLoggedIn = false;
+            adminEmail = null;
+            document.body.classList.remove('logged-in');
+            updateAdminUI();
+            showToast('Erfolgreich ausgeloggt', 'success');
+        }
+
+        // Configure Marked.js
+        function configureMarked() {
+            marked.setOptions({
+                highlight: function(code, lang) {
+                    if (lang && hljs.getLanguage(lang)) {
+                        return hljs.highlight(code, { language: lang }).value;
+                    }
+                    return hljs.highlightAuto(code).value;
+                },
+                breaks: true,
+                gfm: true
+            });
+        }
+
+        // Load Data from API
+        async function loadData() {
+            try {
+                // Load categories and stats
+                const [categoriesRes, statsRes] = await Promise.all([
+                    apiCall('get_categories'),
+                    apiCall('get_stats')
+                ]);
+                
+                state.categories = categoriesRes.data || [];
+                state.categoryCounts = {};
+                
+                if (statsRes.data?.category_counts) {
+                    // category_counts ist ein Objekt, kein Array
+                    state.categoryCounts = statsRes.data.category_counts;
+                }
+                
+                // Load notes
+                await loadNotes();
+                
+                render();
+            } catch (error) {
+                showToast('Fehler beim Laden: ' + error.message, 'error');
+            }
+        }
+
+        // Load Notes
+        async function loadNotes() {
+            try {
+                const params = {};
+                if (state.currentCategory) {
+                    params.category_id = state.currentCategory;
+                }
+                if (state.searchQuery) {
+                    params.search = state.searchQuery;
+                }
+                
+                const response = await apiCall('get_notes', params);
+                state.notes = response.data || [];
+            } catch (error) {
+                console.error('Error loading notes:', error);
+                state.notes = [];
+            }
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Search with debounce
+            let searchTimeout;
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(async () => {
+                    state.searchQuery = e.target.value.trim();
+                    await loadNotes();
+                    renderNotes();
+                }, 300);
+            });
+
+            // New Note Buttons
+            document.getElementById('newNoteBtn').addEventListener('click', openNewNoteModal);
+            document.getElementById('emptyNewNoteBtn').addEventListener('click', openNewNoteModal);
+
+            // Note Modal
+            document.getElementById('closeNoteModal').addEventListener('click', closeNoteModal);
+            document.getElementById('cancelNoteBtn').addEventListener('click', closeNoteModal);
+            document.getElementById('saveNoteBtn').addEventListener('click', saveNote);
+
+            // View Modal
+            document.getElementById('closeViewModal').addEventListener('click', closeViewModal);
+            document.getElementById('closeViewBtn').addEventListener('click', closeViewModal);
+            document.getElementById('editNoteBtn').addEventListener('click', editCurrentNote);
+            document.getElementById('deleteNoteBtn').addEventListener('click', deleteCurrentNote);
+            document.getElementById('printNoteBtn').addEventListener('click', printCurrentNote);
+
+            // Category Modal
+            document.getElementById('addCategoryBtn').addEventListener('click', openCategoryModal);
+            document.getElementById('closeCategoryModal').addEventListener('click', closeCategoryModal);
+            document.getElementById('cancelCategoryBtn').addEventListener('click', closeCategoryModal);
+            document.getElementById('saveCategoryBtn').addEventListener('click', saveCategory);
+
+            // Donate Modal
+            document.getElementById('donateBtn').addEventListener('click', openDonateModal);
+            document.getElementById('closeDonateModal').addEventListener('click', closeDonateModal);
+            setupDonateModal();
+
+            // Table Modal
+            document.getElementById('insertTableBtn').addEventListener('click', openTableModal);
+            document.getElementById('closeTableModal').addEventListener('click', closeTableModal);
+            document.getElementById('cancelTableBtn').addEventListener('click', closeTableModal);
+            document.getElementById('insertTableBtn2').addEventListener('click', insertTable);
+            document.getElementById('tableColumns').addEventListener('input', updateTablePreview);
+            document.getElementById('tableRows').addEventListener('input', updateTablePreview);
+            document.getElementById('tableBorder').addEventListener('change', updateTablePreview);
+
+            // Editor Toolbar
+            setupEditorToolbar();
+
+            // Mobile Menu
+            document.getElementById('hamburgerBtn').addEventListener('click', toggleSidebar);
+            document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
+
+            // Export/Import
+            document.getElementById('exportBtn').addEventListener('click', exportData);
+            document.getElementById('importBtn').addEventListener('click', importData);
+
+            // Close modals on overlay click
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        overlay.classList.remove('active');
+                    }
+                });
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeAllModals();
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    document.getElementById('searchInput').focus();
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                    e.preventDefault();
+                    openNewNoteModal();
+                }
+            });
+            
+            // Category Section Headers (Ein-/Ausklappen)
+            document.querySelectorAll('.category-section-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const section = header.dataset.section;
+                    toggleSection(section);
+                });
+            });
+        }
+
+        // Render Functions
+        function render() {
+            renderCategories();
+            renderNotes();
+            updateCategorySelect();
+        }
+
+        function renderCategories() {
+            const totalNotes = Object.values(state.categoryCounts).reduce((a, b) => parseInt(a) + parseInt(b), 0) || 0;
+            
+            // Alle Notizen (immer sichtbar)
+            const allNotesEl = document.getElementById('allNotesCategory');
+            allNotesEl.innerHTML = `
+                <li class="category-item">
+                    <button class="category-btn ${state.currentCategory === null ? 'active' : ''}" data-category="all">
+                        ${renderIcon('all', 22)}
+                        <span>Alle Notizen</span>
+                        <span class="category-count">${totalNotes}</span>
+                    </button>
+                </li>
+            `;
+            
+            // Sortiere Favoriten nach userPrefs.favoritesOrder
+            const favoriteCategories = userPrefs.favoritesOrder
+                .filter(id => userPrefs.favorites.includes(id))
+                .map(id => state.categories.find(c => c.id === id))
+                .filter(Boolean);
+            
+            // Füge neue Favoriten hinzu, die noch nicht in der Order sind
+            state.categories.forEach(cat => {
+                if (userPrefs.favorites.includes(cat.id) && !favoriteCategories.find(c => c.id === cat.id)) {
+                    favoriteCategories.push(cat);
+                }
+            });
+            
+            // Andere Kategorien (nicht in Favoriten)
+            const otherCategories = state.categories.filter(c => !userPrefs.favorites.includes(c.id));
+            
+            // Favoriten rendern
+            const favoritesEl = document.getElementById('favoritesList');
+            if (favoriteCategories.length > 0) {
+                favoritesEl.innerHTML = favoriteCategories.map(cat => renderCategoryItem(cat, true)).join('');
+                document.getElementById('favoritesHeader').style.display = 'flex';
+                document.getElementById('favoritesContent').style.display = 'block';
+            } else {
+                favoritesEl.innerHTML = '<li style="padding: 8px 12px; color: var(--text-muted); font-size: 0.85rem;">Klicke ★ um Favoriten hinzuzufügen</li>';
+                document.getElementById('favoritesHeader').style.display = 'flex';
+                document.getElementById('favoritesContent').style.display = 'block';
+            }
+            
+            // Andere Kategorien rendern
+            const otherEl = document.getElementById('otherList');
+            if (otherCategories.length > 0) {
+                otherEl.innerHTML = otherCategories.map(cat => renderCategoryItem(cat, false)).join('');
+                document.getElementById('otherHeader').style.display = 'flex';
+                document.getElementById('otherContent').style.display = 'block';
+            } else {
+                otherEl.innerHTML = '';
+                document.getElementById('otherHeader').style.display = 'none';
+                document.getElementById('otherContent').style.display = 'none';
+            }
+            
+            // Event-Handler für Kategorie-Buttons
+            document.querySelectorAll('.category-btn[data-category]').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    // Ignoriere Klicks auf Star-Toggle
+                    if (e.target.closest('.star-toggle')) return;
+                    
+                    const catId = btn.dataset.category;
+                    state.currentCategory = catId === 'all' ? null : catId;
+                    state.searchQuery = '';
+                    document.getElementById('searchInput').value = '';
+                    
+                    await loadNotes();
+                    renderCategories();
+                    renderNotes();
+                    updateHeaderTitle();
+                    closeSidebarMobile();
+                });
+            });
+            
+            // Event-Handler für Star-Toggle
+            document.querySelectorAll('.star-toggle').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const catId = btn.dataset.categoryId;
+                    toggleFavorite(catId);
+                });
+            });
+            
+            // Drag & Drop für Favoriten
+            setupDragAndDrop();
+            
+            // Section UI aktualisieren
+            updateSectionUI();
+        }
+        
+        function renderCategoryItem(cat, isFavorite) {
+            const count = parseInt(state.categoryCounts[cat.id]) || 0;
+            const isActive = state.currentCategory === cat.id;
+            const starClass = userPrefs.favorites.includes(cat.id) ? 'active' : '';
+            
+            return `
+                <li class="category-item" data-category-id="${cat.id}" draggable="${isFavorite}">
+                    ${isFavorite ? '<span class="drag-handle">⋮⋮</span>' : ''}
+                    <button class="category-btn ${isActive ? 'active' : ''}" data-category="${cat.id}">
+                        ${renderIcon(cat.icon, 22)}
+                        <span>${escapeHtml(cat.name)}</span>
+                        <span class="category-count">${count}</span>
+                        <button class="star-toggle ${starClass}" data-category-id="${cat.id}" title="${userPrefs.favorites.includes(cat.id) ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}">
+                            ${userPrefs.favorites.includes(cat.id) ? '★' : '☆'}
+                        </button>
+                    </button>
+                </li>
+            `;
+        }
+        
+        function setupDragAndDrop() {
+            const favoritesEl = document.getElementById('favoritesList');
+            if (!favoritesEl) return;
+            
+            let draggedEl = null;
+            
+            favoritesEl.querySelectorAll('.category-item[draggable="true"]').forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    draggedEl = item;
+                    item.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                
+                item.addEventListener('dragend', () => {
+                    item.classList.remove('dragging');
+                    favoritesEl.querySelectorAll('.category-item').forEach(i => i.classList.remove('drag-over'));
+                    draggedEl = null;
+                });
+                
+                item.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (draggedEl && draggedEl !== item) {
+                        item.classList.add('drag-over');
+                    }
+                });
+                
+                item.addEventListener('dragleave', () => {
+                    item.classList.remove('drag-over');
+                });
+                
+                item.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    item.classList.remove('drag-over');
+                    if (draggedEl && draggedEl !== item) {
+                        const draggedId = draggedEl.dataset.categoryId;
+                        const targetId = item.dataset.categoryId;
+                        reorderFavorites(draggedId, targetId);
+                    }
+                });
+            });
+        }
+
+        function renderNotes() {
+            const grid = document.getElementById('notesGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            if (state.notes.length === 0) {
+                grid.innerHTML = '';
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+                
+                grid.innerHTML = state.notes.map(note => {
+                    const category = state.categories.find(c => c.id === note.category_id) || { name: 'Unbekannt', icon: 'misc' };
+                    const preview = stripMarkdown(note.content || '').substring(0, 150);
+                    const date = formatDate(note.updated_at);
+                    const tags = note.tags || [];
+
+                    return `
+                        <div class="note-card" data-note-id="${note.id}">
+                            <div class="note-card-header">
+                                <div class="note-card-title">${escapeHtml(note.title)}</div>
+                                <div class="note-card-category">${renderIcon(category.icon, 16)} ${escapeHtml(category.name)}</div>
+                            </div>
+                            <div class="note-card-preview">${escapeHtml(preview)}${preview.length >= 150 ? '...' : ''}</div>
+                            <div class="note-card-footer">
+                                <div class="note-card-tags">
+                                    ${tags.slice(0, 3).map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
+                                </div>
+                                <span>${date}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Add click handlers
+                grid.querySelectorAll('.note-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const noteId = card.dataset.noteId;
+                        openViewModal(noteId);
+                    });
+                });
+            }
+        }
+
+        function updateCategorySelect() {
+            const select = document.getElementById('noteCategorySelect');
+            // Für Select-Felder verwenden wir Text-Fallback da SVG dort nicht gut funktioniert
+            select.innerHTML = state.categories.map(cat => {
+                const iconText = getIconFallbackText(cat.icon);
+                return `<option value="${cat.id}">${iconText} ${escapeHtml(cat.name)}</option>`;
+            }).join('');
+        }
+        
+        // Fallback-Text für Select-Felder (wo SVG nicht funktioniert)
+        function getIconFallbackText(iconKey) {
+            const fallbacks = {
+                git: '🔀', github: '🐙', vscode: '💻', java: '☕', react: '⚛️', intellij: '🧠',
+                eclipse: '🌑', docker: '🐳', linux: '🐧', python: '🐍', magik: '✨', smallworld: '🌍',
+                php: '🐘', html: '🌐', sql: '🗄️', postgresql: '🐘', qgis: '🗺️',
+                geoserver: '🌐', csharp: '♯', javascript: '🟨', misc: '📁'
+            };
+            return fallbacks[iconKey] || iconKey || '📁';
+        }
+
+        function updateHeaderTitle() {
+            const title = document.getElementById('currentCategoryTitle');
+            if (state.currentCategory) {
+                const cat = state.categories.find(c => c.id === state.currentCategory);
+                if (cat) {
+                    title.innerHTML = `${renderIcon(cat.icon, 24)} ${escapeHtml(cat.name)}`;
+                } else {
+                    title.textContent = 'Alle Notizen';
+                }
+            } else {
+                title.textContent = 'Alle Notizen';
+            }
+        }
+
+        // Modal Functions
+        function openNewNoteModal() {
+            state.editingNoteId = null;
+            document.getElementById('noteModalTitle').textContent = 'Neue Notiz';
+            document.getElementById('noteTitleInput').value = '';
+            document.getElementById('noteTagsInput').value = '';
+            document.getElementById('noteContentInput').value = '';
+            
+            if (state.currentCategory) {
+                document.getElementById('noteCategorySelect').value = state.currentCategory;
+            }
+            
+            document.getElementById('noteModal').classList.add('active');
+            document.getElementById('noteTitleInput').focus();
+        }
+
+        function closeNoteModal() {
+            document.getElementById('noteModal').classList.remove('active');
+        }
+
+        async function openViewModal(noteId) {
+            const note = state.notes.find(n => n.id === noteId);
+            if (!note) return;
+
+            state.currentNote = note;
+            const category = state.categories.find(c => c.id === note.category_id) || { name: 'Unbekannt', icon: 'misc' };
+            const date = formatDate(note.updated_at, true);
+            const tags = note.tags || [];
+
+            const content = `
+                <div class="note-view-header">
+                    <h1 class="note-view-title">${escapeHtml(note.title)}</h1>
+                    <div class="note-view-meta">
+                        <span class="note-view-category">${renderIcon(category.icon, 18)} ${escapeHtml(category.name)}</span>
+                        <span>•</span>
+                        <span>Aktualisiert: ${date}</span>
+                    </div>
+                    ${tags.length > 0 ? `
+                        <div class="note-card-tags" style="margin-top: 12px;">
+                            ${tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="note-view-content">
+                    ${marked.parse(note.content || '')}
+                </div>
+            `;
+
+            document.getElementById('noteViewContent').innerHTML = content;
+            document.getElementById('viewModal').classList.add('active');
+
+            // Wrap tables for responsive scrolling
+            wrapTablesForResponsive();
+
+            // Add copy buttons to code blocks
+            addCopyButtonsToCodeBlocks();
+
+            // Apply syntax highlighting
+            document.querySelectorAll('#noteViewContent pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        }
+
+        function wrapTablesForResponsive() {
+            document.querySelectorAll('#noteViewContent > table, .note-view-content > table').forEach(table => {
+                // Skip if already wrapped
+                if (table.parentElement.classList.contains('table-wrapper')) return;
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'table-wrapper';
+                table.parentNode.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            });
+        }
+
+        function addCopyButtonsToCodeBlocks() {
+            document.querySelectorAll('#noteViewContent pre').forEach(pre => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'code-block-wrapper';
+                pre.parentNode.insertBefore(wrapper, pre);
+                wrapper.appendChild(pre);
+                
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy-btn';
+                copyBtn.textContent = 'Kopieren';
+                copyBtn.addEventListener('click', async () => {
+                    const code = pre.querySelector('code')?.textContent || pre.textContent;
+                    await navigator.clipboard.writeText(code);
+                    copyBtn.textContent = 'Kopiert!';
+                    setTimeout(() => copyBtn.textContent = 'Kopieren', 2000);
+                });
+                wrapper.appendChild(copyBtn);
+            });
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.remove('active');
+            state.currentNote = null;
+        }
+
+        // Print current note - Mobile compatible version
+        function printCurrentNote() {
+            if (!state.currentNote) return;
+            
+            const note = state.currentNote;
+            const category = state.categories.find(c => c.id === note.category_id) || { name: 'Unbekannt' };
+            const date = formatDate(note.updated_at, true);
+            
+            // Get already highlighted content from the modal
+            const noteViewContent = document.getElementById('noteViewContent');
+            const sourceContent = noteViewContent.querySelector('.note-view-content');
+            if (!sourceContent) return;
+            
+            const contentClone = sourceContent.cloneNode(true);
+            
+            // Remove copy buttons
+            contentClone.querySelectorAll('.copy-btn').forEach(btn => btn.remove());
+            contentClone.querySelectorAll('.code-block-wrapper').forEach(wrapper => {
+                const pre = wrapper.querySelector('pre');
+                if (pre) {
+                    wrapper.parentNode.insertBefore(pre, wrapper);
+                    wrapper.remove();
+                }
+            });
+
+            // Build tags HTML
+            const tagsHtml = (note.tags && note.tags.length > 0) 
+                ? `<div class="tags">${note.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>` 
+                : '';
+            
+            // Create print HTML
+            const printHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>${escapeHtml(note.title)} - DevNotes</title>
+                    <style>
+                        * { box-sizing: border-box; }
+                        body {
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                            max-width: 800px;
+                            margin: 0 auto;
+                            padding: 20px;
+                            color: #333;
+                            line-height: 1.6;
+                            background: white;
+                        }
+                        h1, h2, h3, h4, h5, h6 { color: #1a1a1a; margin-top: 1em; margin-bottom: 0.5em; }
+                        h1.title {
+                            border-bottom: 2px solid #333;
+                            padding-bottom: 10px;
+                            margin: 0 0 10px 0;
+                        }
+                        .meta {
+                            color: #666;
+                            font-size: 0.9rem;
+                            margin-bottom: 20px;
+                        }
+                        .tags { margin-top: 8px; }
+                        .tag {
+                            display: inline-block;
+                            background: #e1e5e9;
+                            padding: 2px 8px;
+                            border-radius: 4px;
+                            font-size: 0.8rem;
+                            margin-right: 5px;
+                            color: #333;
+                        }
+                        pre {
+                            background: #f6f8fa !important;
+                            border: 1px solid #e1e4e8;
+                            border-radius: 6px;
+                            padding: 12px;
+                            overflow-x: auto;
+                            color: #24292e !important;
+                            font-size: 13px;
+                            white-space: pre-wrap;
+                            word-wrap: break-word;
+                        }
+                        code {
+                            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+                            font-size: 0.9em;
+                            color: #24292e;
+                        }
+                        pre code { background: transparent !important; padding: 0; }
+                        :not(pre) > code {
+                            background: #f0f0f0;
+                            padding: 2px 6px;
+                            border-radius: 4px;
+                            color: #c7254e;
+                        }
+                        blockquote {
+                            border-left: 4px solid #0066cc;
+                            margin: 1em 0;
+                            padding: 0.5em 1em;
+                            background: #f0f7ff;
+                            color: #444;
+                        }
+                        table { 
+                            border-collapse: collapse; 
+                            width: 100%; 
+                            margin: 1em 0; 
+                            border: 2px solid #333;
+                            page-break-inside: avoid;
+                        }
+                        th, td { 
+                            border: 1px solid #666; 
+                            padding: 10px 14px; 
+                            text-align: left; 
+                            vertical-align: top;
+                        }
+                        th { 
+                            background: #e8e8e8 !important; 
+                            font-weight: 600;
+                            border-bottom: 2px solid #333;
+                            -webkit-print-color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                        }
+                        tr:nth-child(even) {
+                            background: #f5f5f5 !important;
+                            -webkit-print-color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                        }
+                        a { color: #0066cc; }
+                        p { margin: 0.8em 0; }
+                        ul, ol { margin: 0.8em 0; padding-left: 2em; }
+                        .footer {
+                            margin-top: 40px;
+                            padding-top: 15px;
+                            border-top: 1px solid #ddd;
+                            font-size: 0.8rem;
+                            color: #888;
+                            text-align: center;
+                        }
+                        /* GitHub Light Syntax Highlighting */
+                        .hljs-comment, .hljs-quote { color: #6a737d !important; font-style: italic; }
+                        .hljs-doctag, .hljs-keyword, .hljs-formula { color: #d73a49 !important; }
+                        .hljs-section, .hljs-name, .hljs-selector-tag, .hljs-deletion { color: #22863a !important; }
+                        .hljs-subst { color: #24292e !important; }
+                        .hljs-literal { color: #005cc5 !important; }
+                        .hljs-string, .hljs-regexp, .hljs-addition, .hljs-attribute { color: #032f62 !important; }
+                        .hljs-attr, .hljs-variable, .hljs-template-variable, .hljs-type, .hljs-number { color: #e36209 !important; }
+                        .hljs-selector-class, .hljs-selector-attr, .hljs-selector-pseudo { color: #6f42c1 !important; }
+                        .hljs-symbol, .hljs-bullet, .hljs-link, .hljs-meta, .hljs-selector-id, .hljs-title { color: #6f42c1 !important; }
+                        .hljs-built_in, .hljs-class { color: #005cc5 !important; }
+                        .hljs-function { color: #6f42c1 !important; }
+                        
+                        @media print {
+                            body { padding: 15px; }
+                            pre { 
+                                white-space: pre-wrap; 
+                                word-wrap: break-word;
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                                color-adjust: exact !important;
+                            }
+                            table {
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                                color-adjust: exact !important;
+                            }
+                            .footer { margin-top: 30px; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1 class="title">${escapeHtml(note.title)}</h1>
+                    <div class="meta">
+                        <div>📁 ${escapeHtml(category.name)} &nbsp;•&nbsp; 📅 ${date}</div>
+                        ${tagsHtml}
+                    </div>
+                    <div class="content">${contentClone.innerHTML}</div>
+                    <div class="footer">DevNotes • © ${new Date().getFullYear()} asgardschmiede.eu</div>
+                </body>
+                </html>
+            `;
+            
+            // Create hidden iframe for printing (works better on mobile)
+            const printFrame = document.createElement('iframe');
+            printFrame.style.cssText = 'position: fixed; right: 0; bottom: 0; width: 0; height: 0; border: 0;';
+            printFrame.id = 'printFrame';
+            
+            // Remove old print frame if exists
+            const oldFrame = document.getElementById('printFrame');
+            if (oldFrame) oldFrame.remove();
+            
+            document.body.appendChild(printFrame);
+            
+            const frameDoc = printFrame.contentDocument || printFrame.contentWindow.document;
+            frameDoc.open();
+            frameDoc.write(printHtml);
+            frameDoc.close();
+            
+            // Wait for content to load, then print
+            printFrame.onload = function() {
+                setTimeout(() => {
+                    try {
+                        printFrame.contentWindow.focus();
+                        printFrame.contentWindow.print();
+                    } catch (e) {
+                        // Fallback: Open in new tab
+                        const blob = new Blob([printHtml], { type: 'text/html' });
+                        const url = URL.createObjectURL(blob);
+                        window.open(url, '_blank');
+                        setTimeout(() => URL.revokeObjectURL(url), 10000);
+                    }
+                }, 250);
+            };
+        }
+
+
+        function openCategoryModal() {
+            document.getElementById('categoryModalTitle').textContent = 'Neue Kategorie';
+            document.getElementById('categoryNameInput').value = '';
+            document.getElementById('categoryIconInput').value = '';
+            document.getElementById('categoryModal').classList.add('active');
+            document.getElementById('categoryNameInput').focus();
+        }
+
+        function closeCategoryModal() {
+            document.getElementById('categoryModal').classList.remove('active');
+        }
+
+        function closeAllModals() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+        }
+
+        // Donate Modal Functions
+        let selectedDonateAmount = null;
+
+        function openDonateModal() {
+            selectedDonateAmount = null;
+            document.querySelectorAll('.donate-amount-btn').forEach(btn => btn.classList.remove('selected'));
+            document.getElementById('donateCustomAmount').value = '';
+            document.getElementById('donatePaypalBtn').disabled = true;
+            document.getElementById('donateModal').classList.add('active');
+        }
+
+        function closeDonateModal() {
+            document.getElementById('donateModal').classList.remove('active');
+        }
+
+        function setupDonateModal() {
+            const amountBtns = document.querySelectorAll('.donate-amount-btn');
+            const customInput = document.getElementById('donateCustomAmount');
+            const paypalBtn = document.getElementById('donatePaypalBtn');
+
+            // Amount button clicks
+            amountBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    amountBtns.forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    customInput.value = '';
+                    selectedDonateAmount = parseFloat(btn.dataset.amount);
+                    paypalBtn.disabled = false;
+                });
+            });
+
+            // Custom amount input
+            customInput.addEventListener('input', () => {
+                const value = parseFloat(customInput.value);
+                amountBtns.forEach(b => b.classList.remove('selected'));
+                if (value >= 1) {
+                    selectedDonateAmount = value;
+                    paypalBtn.disabled = false;
+                } else {
+                    selectedDonateAmount = null;
+                    paypalBtn.disabled = true;
+                }
+            });
+
+            // PayPal button click
+            paypalBtn.addEventListener('click', () => {
+                if (selectedDonateAmount && selectedDonateAmount >= 1) {
+                    // PayPal.me Link oder PayPal Donation Link
+                    const paypalEmail = 'post@asgardschmiede.eu';
+                    const amount = selectedDonateAmount.toFixed(2);
+                    const itemName = encodeURIComponent('DevNotes Spende');
+                    
+                    // PayPal Donation URL
+                    const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=${encodeURIComponent(paypalEmail)}&item_name=${itemName}&amount=${amount}&currency_code=EUR`;
+                    
+                    window.open(paypalUrl, '_blank');
+                    closeDonateModal();
+                    showToast('Vielen Dank für deine Unterstützung! ❤️', 'success');
+                }
+            });
+        }
+
+        // ==================== EDITOR TOOLBAR ====================
+        function setupEditorToolbar() {
+            const textarea = document.getElementById('noteContentInput');
+            
+            // Heading Dropdown
+            const headingBtn = document.getElementById('headingDropdownBtn');
+            const headingDropdown = document.getElementById('headingDropdown');
+            
+            headingBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                headingDropdown.classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking elsewhere
+            document.addEventListener('click', () => {
+                headingDropdown.classList.remove('show');
+            });
+            
+            // Heading items
+            headingDropdown.querySelectorAll('.editor-dropdown-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const level = item.dataset.heading;
+                    const prefix = '#'.repeat(parseInt(level)) + ' ';
+                    insertAtCursor(textarea, prefix, '', true);
+                    headingDropdown.classList.remove('show');
+                });
+            });
+            
+            // Format buttons
+            document.querySelectorAll('.editor-btn[data-format]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const format = btn.dataset.format;
+                    applyFormat(textarea, format);
+                });
+            });
+            
+            // Keyboard shortcuts in textarea
+            textarea.addEventListener('keydown', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    switch (e.key.toLowerCase()) {
+                        case 'b':
+                            e.preventDefault();
+                            applyFormat(textarea, 'bold');
+                            break;
+                        case 'i':
+                            e.preventDefault();
+                            applyFormat(textarea, 'italic');
+                            break;
+                    }
+                }
+            });
+        }
+        
+        function applyFormat(textarea, format) {
+            const formats = {
+                bold: { prefix: '**', suffix: '**', placeholder: 'fetter Text' },
+                italic: { prefix: '*', suffix: '*', placeholder: 'kursiver Text' },
+                code: { prefix: '`', suffix: '`', placeholder: 'code' },
+                codeblock: { prefix: '```\n', suffix: '\n```', placeholder: 'Code hier einfügen', newline: true },
+                link: { prefix: '[', suffix: '](url)', placeholder: 'Linktext' },
+                ul: { prefix: '- ', suffix: '', placeholder: 'Listeneintrag', newline: true },
+                ul2: { prefix: '  - ', suffix: '', placeholder: 'Unterpunkt', newline: true },
+                ul3: { prefix: '    - ', suffix: '', placeholder: 'Unterpunkt', newline: true },
+                ol: { prefix: '1. ', suffix: '', placeholder: 'Listeneintrag', newline: true },
+                quote: { prefix: '> ', suffix: '', placeholder: 'Zitat', newline: true }
+            };
+            
+            const fmt = formats[format];
+            if (!fmt) return;
+            
+            insertAtCursor(textarea, fmt.prefix, fmt.suffix, fmt.newline, fmt.placeholder);
+        }
+        
+        function insertAtCursor(textarea, prefix, suffix = '', newline = false, placeholder = '') {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selectedText = text.substring(start, end);
+            
+            let insertText = selectedText || placeholder;
+            let actualPrefix = prefix;
+            
+            // Add newline before if needed
+            if (newline && start > 0 && text[start - 1] !== '\n') {
+                actualPrefix = '\n' + prefix;
+            }
+            
+            const newText = text.substring(0, start) + actualPrefix + insertText + suffix + text.substring(end);
+            
+            textarea.value = newText;
+            
+            // Set cursor position correctly
+            let newCursorStart, newCursorEnd;
+            
+            if (selectedText) {
+                // Text was selected - place cursor after the formatted text
+                newCursorStart = start + actualPrefix.length + insertText.length + suffix.length;
+                newCursorEnd = newCursorStart;
+            } else if (placeholder) {
+                // No selection, has placeholder - select the placeholder
+                newCursorStart = start + actualPrefix.length;
+                newCursorEnd = newCursorStart + placeholder.length;
+            } else {
+                // No selection, no placeholder - place cursor after prefix
+                newCursorStart = start + actualPrefix.length;
+                newCursorEnd = newCursorStart;
+            }
+            
+            // Important: Set selection range BEFORE focus to prevent scroll jump
+            textarea.setSelectionRange(newCursorStart, newCursorEnd);
+            textarea.focus();
+            
+            // Scroll cursor into view
+            const lineHeight = parseInt(window.getComputedStyle(textarea).lineHeight) || 20;
+            const lines = textarea.value.substring(0, newCursorStart).split('\n').length;
+            const scrollTarget = (lines - 5) * lineHeight;
+            if (scrollTarget > 0 && scrollTarget < textarea.scrollHeight) {
+                textarea.scrollTop = Math.max(0, scrollTarget);
+            }
+        }
+        
+        // ==================== TABLE MODAL ====================
+        function openTableModal() {
+            document.getElementById('tableColumns').value = 3;
+            document.getElementById('tableRows').value = 3;
+            document.getElementById('tableBorder').checked = true;
+            updateTablePreview();
+            document.getElementById('tableModal').classList.add('active');
+        }
+        
+        function closeTableModal() {
+            document.getElementById('tableModal').classList.remove('active');
+        }
+        
+        function updateTablePreview() {
+            const cols = parseInt(document.getElementById('tableColumns').value) || 3;
+            const rows = parseInt(document.getElementById('tableRows').value) || 3;
+            const hasBorder = document.getElementById('tableBorder').checked;
+            
+            const preview = document.getElementById('tablePreview');
+            preview.className = 'table-preview-container' + (hasBorder ? '' : ' no-border');
+            
+            let html = '<table><thead><tr>';
+            for (let c = 0; c < cols; c++) {
+                html += `<th>Spalte ${c + 1}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+            
+            for (let r = 0; r < rows; r++) {
+                html += '<tr>';
+                for (let c = 0; c < cols; c++) {
+                    html += `<td>Zelle</td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            
+            preview.innerHTML = html;
+        }
+        
+        function insertTable() {
+            const cols = parseInt(document.getElementById('tableColumns').value) || 3;
+            const rows = parseInt(document.getElementById('tableRows').value) || 3;
+            const hasBorder = document.getElementById('tableBorder').checked;
+            
+            // Generate Markdown table
+            let markdown = '\n';
+            
+            // Header row
+            let header = '|';
+            let separator = '|';
+            for (let c = 0; c < cols; c++) {
+                header += ` Spalte ${c + 1} |`;
+                separator += ' --- |';
+            }
+            markdown += header + '\n' + separator + '\n';
+            
+            // Data rows
+            for (let r = 0; r < rows; r++) {
+                let row = '|';
+                for (let c = 0; c < cols; c++) {
+                    row += '  |';
+                }
+                markdown += row + '\n';
+            }
+            
+            // Add CSS class hint for borderless tables
+            if (!hasBorder) {
+                markdown += '\n<!-- Tabelle ohne Rahmen: {.no-border} -->\n';
+            }
+            
+            markdown += '\n';
+            
+            const textarea = document.getElementById('noteContentInput');
+            const start = textarea.selectionStart;
+            const text = textarea.value;
+            
+            textarea.value = text.substring(0, start) + markdown + text.substring(start);
+            textarea.focus();
+            textarea.setSelectionRange(start + markdown.indexOf('Spalte 1') + 7, start + markdown.indexOf('Spalte 1') + 8);
+            
+            closeTableModal();
+            showToast('Tabelle eingefügt', 'success');
+        }
+
+        // CRUD Operations
+        async function saveNote() {
+            const title = document.getElementById('noteTitleInput').value.trim();
+            const categoryId = document.getElementById('noteCategorySelect').value;
+            const tags = document.getElementById('noteTagsInput').value.split(',').map(t => t.trim()).filter(t => t);
+            let content = document.getElementById('noteContentInput').value;
+            
+            // Auto-detect code blocks
+            content = autoDetectCodeBlocks(content);
+
+            if (!title) {
+                showToast('Bitte gib einen Titel ein', 'error');
+                return;
+            }
+
+            try {
+                if (state.editingNoteId) {
+                    await apiCall('update_note', {
+                        id: state.editingNoteId,
+                        title,
+                        category_id: categoryId,
+                        tags,
+                        content
+                    }, 'POST');
+                    showToast('Notiz aktualisiert!', 'success');
+                } else {
+                    await apiCall('create_note', {
+                        title,
+                        category_id: categoryId,
+                        tags,
+                        content
+                    }, 'POST');
+                    showToast('Notiz erstellt!', 'success');
+                }
+
+                closeNoteModal();
+                await loadData();
+            } catch (error) {
+                showToast('Fehler: ' + error.message, 'error');
+            }
+        }
+
+        function editCurrentNote() {
+            if (!state.currentNote) return;
+
+            state.editingNoteId = state.currentNote.id;
+            document.getElementById('noteModalTitle').textContent = 'Notiz bearbeiten';
+            document.getElementById('noteTitleInput').value = state.currentNote.title;
+            document.getElementById('noteCategorySelect').value = state.currentNote.category_id;
+            document.getElementById('noteTagsInput').value = (state.currentNote.tags || []).join(', ');
+            document.getElementById('noteContentInput').value = state.currentNote.content || '';
+
+            closeViewModal();
+            document.getElementById('noteModal').classList.add('active');
+        }
+
+        async function deleteCurrentNote() {
+            if (!state.currentNote) return;
+
+            if (confirm('Möchtest du diese Notiz wirklich löschen?')) {
+                try {
+                    await apiCall('delete_note', { id: state.currentNote.id }, 'POST');
+                    showToast('Notiz gelöscht', 'success');
+                    closeViewModal();
+                    await loadData();
+                } catch (error) {
+                    showToast('Fehler: ' + error.message, 'error');
+                }
+            }
+        }
+
+        async function saveCategory() {
+            const name = document.getElementById('categoryNameInput').value.trim();
+            const icon = document.getElementById('categoryIconInput').value.trim() || '📁';
+
+            if (!name) {
+                showToast('Bitte gib einen Namen ein', 'error');
+                return;
+            }
+
+            try {
+                await apiCall('create_category', { name, icon }, 'POST');
+                showToast('Kategorie erstellt!', 'success');
+                closeCategoryModal();
+                await loadData();
+            } catch (error) {
+                showToast('Fehler: ' + error.message, 'error');
+            }
+        }
+
+        // Export/Import - Electron Version
+        async function exportData() {
+            try {
+                // Nutze Electron Dialog für Speicherort
+                const result = await window.electronAPI.exportData();
+                if (result.success) {
+                    showToast('Export erfolgreich!', 'success');
+                } else if (result.error !== 'Export abgebrochen') {
+                    showToast('Export fehlgeschlagen: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showToast('Export fehlgeschlagen: ' + error.message, 'error');
+            }
+        }
+
+        async function importData() {
+            // Nutze Electron Dialog für Dateiauswahl
+            try {
+                const result = await window.electronAPI.importData();
+                if (result.success) {
+                    showToast(`Import erfolgreich! ${result.data?.imported || 0} Notizen importiert.`, 'success');
+                    await loadData();
+                } else if (result.error !== 'Import abgebrochen') {
+                    showToast('Import fehlgeschlagen: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showToast('Import fehlgeschlagen: ' + error.message, 'error');
+            }
+        }
+
+        // Auto-Detection für Code, Listen und Tabellen
+        function autoDetectCodeBlocks(text) {
+            if (!text) return text;
+            
+            // Erst Listen und Tabellen erkennen, dann Code
+            text = autoDetectTables(text);
+            text = autoDetectLists(text);
+            text = autoDetectCode(text);
+            
+            return text;
+        }
+        
+        // Tabellen-Erkennung (Tab-getrennt, mehrere Spaces, oder Pipe-Format)
+        function autoDetectTables(text) {
+            if (!text) return text;
+            
+            // Skip wenn schon Markdown-Tabellen vorhanden
+            if (/\|.+\|[\r\n]+\|[\s-:]+\|/.test(text)) {
+                return text;
+            }
+            
+            const lines = text.split('\n');
+            const result = [];
+            let tableLines = [];
+            let inTable = false;
+            
+            function looksLikeTableRow(line) {
+                const trimmed = line.trim();
+                if (!trimmed) return false;
+                
+                // Tab-getrennte Daten (mindestens 2 Tabs)
+                if ((trimmed.match(/\t/g) || []).length >= 1) {
+                    const parts = trimmed.split('\t').filter(p => p.trim());
+                    if (parts.length >= 2) return 'tab';
+                }
+                
+                // Mehrere Spaces als Trenner (mindestens 3 Spaces zwischen Wörtern)
+                if (/\S\s{3,}\S/.test(trimmed)) {
+                    const parts = trimmed.split(/\s{3,}/).filter(p => p.trim());
+                    if (parts.length >= 2) return 'space';
+                }
+                
+                // Semikolon-getrennt (CSV-artig)
+                if ((trimmed.match(/;/g) || []).length >= 1) {
+                    const parts = trimmed.split(';').filter(p => p.trim());
+                    if (parts.length >= 2) return 'semicolon';
+                }
+                
+                return false;
+            }
+            
+            function convertToMarkdownTable(lines, separator) {
+                if (lines.length < 2) return lines.join('\n');
+                
+                let splitPattern;
+                switch(separator) {
+                    case 'tab': splitPattern = /\t/; break;
+                    case 'space': splitPattern = /\s{3,}/; break;
+                    case 'semicolon': splitPattern = /;/; break;
+                    default: return lines.join('\n');
+                }
+                
+                const rows = lines.map(line => 
+                    line.split(splitPattern).map(cell => cell.trim())
+                );
+                
+                // Maximale Spaltenanzahl ermitteln
+                const maxCols = Math.max(...rows.map(r => r.length));
+                
+                // Zeilen auf gleiche Spaltenanzahl bringen
+                rows.forEach(row => {
+                    while (row.length < maxCols) row.push('');
+                });
+                
+                // Markdown-Tabelle erstellen
+                let md = '| ' + rows[0].join(' | ') + ' |\n';
+                md += '| ' + rows[0].map(() => '---').join(' | ') + ' |\n';
+                for (let i = 1; i < rows.length; i++) {
+                    md += '| ' + rows[i].join(' | ') + ' |\n';
+                }
+                
+                return md.trim();
+            }
+            
+            let currentSeparator = null;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const tableType = looksLikeTableRow(line);
+                
+                if (tableType && !inTable) {
+                    inTable = true;
+                    currentSeparator = tableType;
+                    tableLines = [line];
+                } else if (tableType === currentSeparator && inTable) {
+                    tableLines.push(line);
+                } else if (inTable) {
+                    // Tabelle beenden
+                    if (tableLines.length >= 2) {
+                        result.push(convertToMarkdownTable(tableLines, currentSeparator));
+                    } else {
+                        result.push(...tableLines);
+                    }
+                    tableLines = [];
+                    inTable = false;
+                    currentSeparator = null;
+                    result.push(line);
+                } else {
+                    result.push(line);
+                }
+            }
+            
+            // Restliche Tabelle verarbeiten
+            if (tableLines.length >= 2) {
+                result.push(convertToMarkdownTable(tableLines, currentSeparator));
+            } else if (tableLines.length > 0) {
+                result.push(...tableLines);
+            }
+            
+            return result.join('\n');
+        }
+        
+        // Listen-Erkennung (Aufzählungszeichen, Nummern, Buchstaben)
+        function autoDetectLists(text) {
+            if (!text) return text;
+            
+            // Skip wenn schon Markdown-Listen vorhanden
+            if (/^[\s]*[-*+]\s/m.test(text) || /^[\s]*\d+\.\s/m.test(text)) {
+                return text;
+            }
+            
+            const lines = text.split('\n');
+            const result = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                const trimmed = line.trim();
+                const leadingSpaces = line.match(/^(\s*)/)[1];
+                const indent = Math.floor(leadingSpaces.length / 2) * 2; // 2er-Schritte für Einrückung
+                const indentStr = ' '.repeat(indent);
+                
+                // Verschiedene Aufzählungszeichen erkennen
+                // • ● ○ ◦ ▪ ▫ ‣ ⁃ ★ ☆ ➤ ➢ → ► ▶ ◆ ◇ ■ □
+                const bulletMatch = trimmed.match(/^[•●○◦▪▫‣⁃★☆➤➢→►▶◆◇■□]\s*(.*)$/);
+                if (bulletMatch) {
+                    result.push(indentStr + '- ' + bulletMatch[1]);
+                    continue;
+                }
+                
+                // Nummerierte Listen: 1. 2. 3. oder 1) 2) 3) oder (1) (2) (3)
+                const numberMatch = trimmed.match(/^(?:\(?\d+[\.\)]\)?|\d+\))\s*(.*)$/);
+                if (numberMatch) {
+                    result.push(indentStr + '1. ' + numberMatch[1]);
+                    continue;
+                }
+                
+                // Buchstaben-Listen: a. b. c. oder a) b) c) oder A. B. C.
+                const letterMatch = trimmed.match(/^(?:\(?[a-zA-Z][\.\)]\)?|[a-zA-Z]\))\s*(.*)$/);
+                if (letterMatch) {
+                    result.push(indentStr + '- ' + letterMatch[1]);
+                    continue;
+                }
+                
+                // Römische Zahlen: i. ii. iii. oder I. II. III.
+                const romanMatch = trimmed.match(/^(?:[ivxIVX]+[\.\)])\s*(.*)$/);
+                if (romanMatch) {
+                    result.push(indentStr + '1. ' + romanMatch[1]);
+                    continue;
+                }
+                
+                // Gedankenstriche am Anfang (aber nicht Markdown)
+                const dashMatch = trimmed.match(/^[–—]\s*(.*)$/);
+                if (dashMatch) {
+                    result.push(indentStr + '- ' + dashMatch[1]);
+                    continue;
+                }
+                
+                result.push(line);
+            }
+            
+            return result.join('\n');
+        }
+        
+        // Code-Erkennung (bestehende Logik)
+        function autoDetectCode(text) {
+            if (!text) return text;
+            
+            // Skip if already has markdown code blocks
+            if (/```[\s\S]*?```/.test(text)) {
+                return text;
+            }
+            
+            const lines = text.split('\n');
+            const result = [];
+            let codeBlock = [];
+            let detectedLang = null;
+            let inCodeBlock = false;
+            
+            // Language detection patterns
+            const langPatterns = {
+                bash: [
+                    /^(sudo|apt|yum|brew|npm|yarn|pip|git|cd|ls|mkdir|rm|cp|mv|chmod|chown|cat|grep|sed|awk|curl|wget|tar|zip|unzip|ssh|scp|docker|kubectl)\s/,
+                    /^(export|source|echo|printf|read|if|then|else|fi|for|do|done|while|case|esac)\s/,
+                    /^\$\s/,
+                    /^#\s*(falls|wenn|statt|Haupt|install|update|config)/i,
+                    /\|\s*(grep|sed|awk|sort|uniq|head|tail|wc)/,
+                    /&&\s*(cd|mkdir|rm|git)/
+                ],
+                javascript: [
+                    /^(const|let|var|function|class|import|export|async|await)\s/,
+                    /^(if|else|for|while|switch|try|catch|finally)\s*[\({]/,
+                    /=>\s*[{\(]/,
+                    /\.(map|filter|reduce|forEach|find|some|every)\(/,
+                    /console\.(log|error|warn)/,
+                    /document\.(getElementById|querySelector|createElement)/,
+                    /^import\s+.*\s+from\s+['"]/
+                ],
+                typescript: [
+                    /:\s*(string|number|boolean|any|void|never)\b/,
+                    /interface\s+\w+/,
+                    /type\s+\w+\s*=/,
+                    /<\w+(\s*,\s*\w+)*>/
+                ],
+                python: [
+                    /^(def|class|import|from|if|elif|else|for|while|try|except|with|async|await)\s/,
+                    /^\s*(def|class)\s+\w+/,
+                    /^import\s+\w+/,
+                    /^from\s+\w+\s+import/,
+                    /:\s*$/,
+                    /print\s*\(/,
+                    /self\./
+                ],
+                java: [
+                    /^(public|private|protected|static|final|abstract|class|interface|enum|void|int|String|boolean|double|float|long)\s/,
+                    /System\.(out|err|in)\./,
+                    /^package\s+[\w.]+;/,
+                    /^import\s+[\w.]+;/,
+                    /@(Override|Deprecated|SuppressWarnings|FunctionalInterface)/,
+                    /new\s+\w+\s*\(/
+                ],
+                sql: [
+                    /^(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|FROM|WHERE|JOIN|ORDER BY|GROUP BY|HAVING|UNION|INDEX|TABLE|DATABASE)\s/i,
+                    /^\s*(SELECT|INSERT|UPDATE|DELETE)\s/i
+                ],
+                html: [
+                    /^<(!DOCTYPE|html|head|body|div|span|p|a|img|ul|ol|li|table|form|input|button|script|style|link|meta)/i,
+                    /<\/\w+>/
+                ],
+                css: [
+                    /^[\.\#\w\-\[\]]+\s*\{/,
+                    /^\s*(margin|padding|color|background|font|display|position|width|height|border|flex|grid):/,
+                    /@(media|keyframes|import|font-face)/
+                ],
+                json: [
+                    /^\s*[\{\[]/,
+                    /^\s*"\w+":\s*/
+                ],
+                yaml: [
+                    /^\w+:\s*$/,
+                    /^\s+-\s+\w+/,
+                    /^\s+\w+:\s+/
+                ],
+                xml: [
+                    /^<\?xml/,
+                    /^<[\w\-]+(\s+[\w\-]+="[^"]*")*\s*>/
+                ],
+                php: [
+                    /^<\?php/,
+                    /^\$\w+\s*=/,
+                    /function\s+\w+\s*\(/,
+                    /->/
+                ],
+                magik: [
+                    /^_method\s/,
+                    /^_proc\s*\(/,
+                    /^_local\s/,
+                    /^_global\s/,
+                    /_endmethod/,
+                    /_endif/,
+                    /_endloop/,
+                    /\._[\w]+/,
+                    />>|<<|_is\s|_isnt\s/
+                ],
+                dockerfile: [
+                    /^(FROM|RUN|CMD|EXPOSE|ENV|ADD|COPY|ENTRYPOINT|VOLUME|USER|WORKDIR|ARG|LABEL)\s/
+                ],
+                powershell: [
+                    /^\$\w+\s*=/,
+                    /^(Get-|Set-|New-|Remove-|Install-|Import-)/,
+                    /\|\s*(Where-Object|Select-Object|ForEach-Object)/
+                ]
+            };
+            
+            function detectLanguage(lines) {
+                const scores = {};
+                
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed) continue;
+                    
+                    for (const [lang, patterns] of Object.entries(langPatterns)) {
+                        for (const pattern of patterns) {
+                            if (pattern.test(trimmed)) {
+                                scores[lang] = (scores[lang] || 0) + 1;
+                            }
+                        }
+                    }
+                }
+                
+                let maxScore = 0;
+                let bestLang = null;
+                for (const [lang, score] of Object.entries(scores)) {
+                    if (score > maxScore) {
+                        maxScore = score;
+                        bestLang = lang;
+                    }
+                }
+                
+                return maxScore >= 1 ? bestLang : null;
+            }
+            
+            function looksLikeCode(line) {
+                const trimmed = line.trim();
+                if (!trimmed) return false;
+                
+                const codeIndicators = [
+                    /^(const|let|var|function|class|def|public|private|import|export|from|package)\s/,
+                    /^(if|else|for|while|switch|try|catch|elif|except|case)\s*[\(\{:]/,
+                    /^(git|npm|yarn|pip|docker|kubectl|sudo|apt|brew|cd|mkdir|rm|chmod|curl|wget)\s/,
+                    /^\$\w+/,
+                    /[{}\[\]();]\s*$/,
+                    /=>\s*[{\(]/,
+                    /\.(map|filter|reduce|forEach|push|pop|split|join|replace)\(/,
+                    /^#\s*(include|define|ifdef|ifndef|pragma)/,
+                    /^_method\s|^_proc|^_local|^_global/,
+                    /_endif|_endmethod|_endloop/,
+                    /^\s*@\w+/,
+                    /^<[!\/]?\w/,
+                    /^\s*[\.\#][\w\-]+\s*\{/
+                ];
+                
+                return codeIndicators.some(pattern => pattern.test(trimmed));
+            }
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const isCode = looksLikeCode(line);
+                
+                if (isCode && !inCodeBlock) {
+                    inCodeBlock = true;
+                    codeBlock = [line];
+                } else if (isCode && inCodeBlock) {
+                    codeBlock.push(line);
+                } else if (!isCode && inCodeBlock) {
+                    const nextNonEmpty = lines.slice(i + 1).find(l => l.trim());
+                    if (line.trim() === '' && nextNonEmpty && looksLikeCode(nextNonEmpty)) {
+                        codeBlock.push(line);
+                    } else if (codeBlock.length >= 1) {
+                        const lang = detectLanguage(codeBlock) || '';
+                        result.push('```' + lang);
+                        result.push(...codeBlock);
+                        result.push('```');
+                        result.push(line);
+                        codeBlock = [];
+                        inCodeBlock = false;
+                    } else {
+                        result.push(...codeBlock, line);
+                        codeBlock = [];
+                        inCodeBlock = false;
+                    }
+                } else {
+                    result.push(line);
+                }
+            }
+            
+            if (codeBlock.length >= 1) {
+                const lang = detectLanguage(codeBlock) || '';
+                result.push('```' + lang);
+                result.push(...codeBlock);
+                result.push('```');
+            }
+            
+            return result.join('\n');
+        }
+
+        // Helper Functions
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function stripMarkdown(text) {
+            if (!text) return '';
+            return text
+                .replace(/```[\s\S]*?```/g, '')
+                .replace(/`[^`]*`/g, '')
+                .replace(/#{1,6}\s/g, '')
+                .replace(/\*\*([^*]+)\*\*/g, '$1')
+                .replace(/\*([^*]+)\*/g, '$1')
+                .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+                .replace(/>\s/g, '')
+                .replace(/[-*+]\s/g, '')
+                .replace(/\n+/g, ' ')
+                .trim();
+        }
+
+        function formatDate(dateStr, includeTime = false) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const options = {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            };
+            if (includeTime) {
+                options.hour = '2-digit';
+                options.minute = '2-digit';
+            }
+            return date.toLocaleDateString('de-DE', options);
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+            document.getElementById('hamburgerBtn').classList.toggle('active');
+        }
+
+        function closeSidebarMobile() {
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('sidebarOverlay').classList.remove('active');
+                document.getElementById('hamburgerBtn').classList.remove('active');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = { success: '✓', error: '⚠', info: 'ℹ' };
+            toast.innerHTML = `
+                <span>${icons[type] || '•'}</span>
+                <span>${escapeHtml(message)}</span>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize App
+        init();
+    </script>
+</body>
+</html>
