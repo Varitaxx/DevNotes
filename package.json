@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "DevNotes - Entwickler-Nachschlagewerk als Desktop-App",
   "main": "src/main.js",
-  "author": "asgardschmiede.eu",
+ "author": {
+  "name": "Varitaxx",
+  "email": "post@asgardschmiede.eu"
+},
   "license": "MIT",
   "scripts": {
     "start": "electron .",
